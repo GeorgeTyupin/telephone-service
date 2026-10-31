@@ -1,9 +1,9 @@
 package calls
 
 import (
+	"context"
 	"log/slog"
-	"net/url"
-	"telephone-service/internal/dto"
+	"telephone-service/internal/domain"
 )
 
 type GetCallsUsecase struct {
@@ -16,6 +16,6 @@ func NewGetCallsUsecase(logger *slog.Logger) *GetCallsUsecase {
 	}
 }
 
-func (uc *GetCallsUsecase) Execute(params url.Values) ([]dto.Call, error) {
-	return []dto.Call{}, nil
+func (uc *GetCallsUsecase) Execute(_ context.Context) ([]domain.Call, error) {
+	return []domain.Call{}, nil
 }
