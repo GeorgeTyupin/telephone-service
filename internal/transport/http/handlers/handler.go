@@ -1,4 +1,4 @@
-package http
+package handlers
 
 import (
 	api "telephone-service/codegen/oas"

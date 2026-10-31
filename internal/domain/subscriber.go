@@ -1,13 +1,13 @@
 package domain
 
-type Abonent struct {
+type Subscriber struct {
 	Id          int
 	Name        string
 	PhoneNumber PhoneNumber
 }
 
-var WrongAbonent = Abonent{
+var WrongSubscriber = Subscriber{
 	Id:          -1,
-	Name:        "Wrong abonent",
+	Name:        "Wrong subscriber",
 	PhoneNumber: WrongPhoneNumber,
 }

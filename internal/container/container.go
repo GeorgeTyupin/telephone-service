@@ -4,12 +4,11 @@ import (
 	"context"
 	"log/slog"
 	"os"
-	"telephone-service/internal/app"
 	"telephone-service/internal/config"
-	"telephone-service/internal/db/migrator"
-	"telephone-service/internal/db/pool"
-	callsHandler "telephone-service/internal/handler/calls"
-	"telephone-service/internal/mapper"
+	"telephone-service/internal/db/postgres/migrator"
+	"telephone-service/internal/db/postgres/pool"
+	"telephone-service/internal/transport/http/handlers/calls"
+	callsHandler "telephone-service/internal/transport/http/handlers/subscribers"
 	getCallsUC "telephone-service/internal/usecase/calls"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -19,12 +18,11 @@ type Container struct {
 	config config.Config
 	logger *slog.Logger
 
-	App    *app.App
 	dbPool *pgxpool.Pool
-	mapper *mapper.Mapper
 
 	//handlers
-	callsHandler *callsHandler.CallsHandler
+	callsHandler       *calls.CallsHandler
+	subscribersHandler *callsHandler.SubscribersHandler
 
 	//usecases
 	getCallsUsecase *getCallsUC.GetCallsUsecase

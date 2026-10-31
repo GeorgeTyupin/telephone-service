@@ -1,13 +1,28 @@
 package container
 
-import calls_handler "telephone-service/internal/handler/calls"
+import (
+	"telephone-service/codegen/oas"
+	"telephone-service/internal/transport/http/handlers/calls"
+	"telephone-service/internal/transport/http/handlers/subscribers"
+)
 
-func (c *Container) ResolveCallsHandler() *calls_handler.CallsHandler {
+type apiHandler struct {
+	*calls.CallsHandler
+	*subscribers.SubscribersHandler
+}
+
+var _ api.Handler = (*apiHandler)(nil)
+
+func (c *Container) ResolveCallsHandler() *calls.CallsHandler {
 	if c.callsHandler == nil {
-		c.callsHandler = calls_handler.NewCallsHandler(
-			c.logger,
-			c.ResolveGetCallsUsecase(),
-		)
+		c.callsHandler = calls.NewCallsHandler(c.ResolveGetCallsUsecase())
 	}
 	return c.callsHandler
+}
+
+func (c *Container) ResolveSubscribersHandler() *subscribers.SubscribersHandler {
+	if c.subscribersHandler == nil {
+		c.subscribersHandler = subscribers.NewSubscribersHandler()
+	}
+	return c.subscribersHandler
 }
