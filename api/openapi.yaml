@@ -1,0 +1,145 @@
+openapi: 3.0.3
+info:
+  title: API телефонного сервиса
+  version: 1.0.0
+  description: |
+    HTTP-контракт телефонного сервиса. Для совместимости сохранены прежние
+    URL и имена JSON-полей. Во внутренних моделях используется Subscriber.
+    Наличие операции в контракте не означает, что её бизнес-логика реализована.
+paths:
+  /calls:
+    get:
+      operationId: getCalls
+      summary: Получить список звонков
+      responses:
+        '200':
+          description: Список звонков
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Call'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /abonets:
+    get:
+      operationId: getSubscribers
+      summary: Получить список абонентов
+      description: Прежний URL намеренно сохранён для совместимости.
+      responses:
+        '200':
+          description: Список абонентов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Subscriber'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+  /call:
+    post:
+      operationId: createCall
+      summary: Создать звонок
+      description: Бизнес-логика операции пока не реализована.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCallRequest'
+      responses:
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+components:
+  schemas:
+    Subscriber:
+      type: object
+      required: [id, name, phone_number]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        phone_number:
+          type: string
+    Call:
+      type: object
+      x-ogen-properties:
+        first_abonent:
+          name: FirstSubscriber
+        second_abonent:
+          name: SecondSubscriber
+      required: [id, first_abonent, second_abonent, duration, created_at]
+      properties:
+        id:
+          type: integer
+        first_abonent:
+          type: string
+        second_abonent:
+          type: string
+        duration:
+          type: string
+          description: Продолжительность в формате Go, например 1m30s.
+        created_at:
+          type: string
+          description: >-
+            Прежнее текстовое представление времени без ограничения RFC 3339.
+    CreateCallRequest:
+      type: object
+      x-ogen-properties:
+        first_abonent:
+          name: FirstSubscriber
+        second_abonent:
+          name: SecondSubscriber
+      required: [id, first_abonent, second_abonent, duration, created_at]
+      properties:
+        id:
+          type: integer
+        first_abonent:
+          type: string
+        second_abonent:
+          type: string
+        duration:
+          type: string
+          description: Продолжительность в формате Go, например 1m30s.
+        created_at:
+          type: string
+          description: Дата и время в формате, принимаемом доменным парсером.
+    Error:
+      type: object
+      description: Штатный формат ошибки HTTP-сервера ogen.
+      required: [error_message]
+      properties:
+        error_message:
+          type: string
+  responses:
+    BadRequest:
+      description: Некорректный запрос
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InternalError:
+      description: Внутренняя ошибка сервера
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotImplemented:
+      description: Бизнес-логика операции пока не реализована
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
