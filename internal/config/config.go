@@ -16,7 +16,7 @@ const (
 )
 
 type Config struct {
-	Server   server   `yaml:"server"`
+	Server   Server   `yaml:"server"`
 	Database database `yaml:"db"`
 }
 
@@ -33,8 +33,10 @@ func (d database) GetConnectionString() string {
 	return fmt.Sprintf("postgres://%s:%s@localhost:%s/%s?sslmode=disable", d.User, d.Password, d.Port, d.Name)
 }
 
-type server struct {
-	Addr string `yaml:"addr"`
+type Server struct {
+	Addr              string        `yaml:"addr"`
+	ReadHeaderTimeout time.Duration `yaml:"read_header_timeout"`
+	ShutdownTimeout   time.Duration `yaml:"shutdown_timeout"`
 }
 
 func MustLoad() Config {

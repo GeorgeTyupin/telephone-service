@@ -1,6 +1,8 @@
 server:
   addr: ":8888"
-  
+  read_header_timeout: 5s
+  shutdown_timeout: 5s
+
 db:
   port: 5400
   init_timeout: 10s
