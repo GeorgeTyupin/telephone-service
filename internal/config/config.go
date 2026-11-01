@@ -16,8 +16,9 @@ const (
 )
 
 type Config struct {
-	Server   Server   `yaml:"server"`
-	Database database `yaml:"db"`
+	Server    Server    `yaml:"server"`
+	Database  database  `yaml:"db"`
+	Telemetry Telemetry `yaml:"telemetry"`
 }
 
 type database struct {
@@ -37,6 +38,29 @@ type Server struct {
 	Addr              string        `yaml:"addr"`
 	ReadHeaderTimeout time.Duration `yaml:"read_header_timeout"`
 	ShutdownTimeout   time.Duration `yaml:"shutdown_timeout"`
+}
+
+type Telemetry struct {
+	Environment     string        `yaml:"environment" env:"TELEMETRY_ENVIRONMENT"`
+	ShutdownTimeout time.Duration `yaml:"shutdown_timeout"`
+	Logs            Logs          `yaml:"logs"`
+	Metrics         Metrics       `yaml:"metrics"`
+	Tracing         Tracing       `yaml:"tracing"`
+}
+
+type Logs struct {
+	Level  string `yaml:"level" env:"LOG_LEVEL"`
+	Format string `yaml:"format" env:"LOG_FORMAT"`
+}
+
+type Metrics struct {
+	Enabled bool `yaml:"enabled" env:"METRICS_ENABLED"`
+}
+
+type Tracing struct {
+	Enabled     bool    `yaml:"enabled" env:"TRACING_ENABLED"`
+	Endpoint    string  `yaml:"endpoint" env:"OTEL_EXPORTER_OTLP_TRACES_ENDPOINT"`
+	SampleRatio float64 `yaml:"sample_ratio" env:"TRACING_SAMPLE_RATIO"`
 }
 
 func MustLoad() Config {

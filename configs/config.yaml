@@ -3,6 +3,19 @@ server:
   read_header_timeout: 5s
   shutdown_timeout: 5s
 
+telemetry:
+  environment: development
+  shutdown_timeout: 5s
+  logs:
+    level: info
+    format: json
+  metrics:
+    enabled: true
+  tracing:
+    enabled: false
+    endpoint: "http://localhost:4318/v1/traces"
+    sample_ratio: 1.0
+
 db:
   port: 5400
   init_timeout: 10s
