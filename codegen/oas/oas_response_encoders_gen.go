@@ -7,9 +7,11 @@ import (
 
 	"github.com/go-faster/errors"
 	"github.com/go-faster/jx"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
-func encodeCreateCallResponse(response CreateCallRes, w http.ResponseWriter) error {
+func encodeCreateCallResponse(response CreateCallRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
 	case *CreateCallBadRequest:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -26,6 +28,7 @@ func encodeCreateCallResponse(response CreateCallRes, w http.ResponseWriter) err
 	case *CreateCallInternalServerError:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(500)
+		span.SetStatus(codes.Error, http.StatusText(500))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -38,6 +41,7 @@ func encodeCreateCallResponse(response CreateCallRes, w http.ResponseWriter) err
 	case *CreateCallNotImplemented:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(501)
+		span.SetStatus(codes.Error, http.StatusText(501))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -52,7 +56,7 @@ func encodeCreateCallResponse(response CreateCallRes, w http.ResponseWriter) err
 	}
 }
 
-func encodeGetCallsResponse(response GetCallsRes, w http.ResponseWriter) error {
+func encodeGetCallsResponse(response GetCallsRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
 	case *GetCallsOKApplicationJSON:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -81,6 +85,7 @@ func encodeGetCallsResponse(response GetCallsRes, w http.ResponseWriter) error {
 	case *GetCallsInternalServerError:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(500)
+		span.SetStatus(codes.Error, http.StatusText(500))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -95,7 +100,7 @@ func encodeGetCallsResponse(response GetCallsRes, w http.ResponseWriter) error {
 	}
 }
 
-func encodeGetSubscribersResponse(response GetSubscribersRes, w http.ResponseWriter) error {
+func encodeGetSubscribersResponse(response GetSubscribersRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
 	case *GetSubscribersOKApplicationJSON:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -124,6 +129,7 @@ func encodeGetSubscribersResponse(response GetSubscribersRes, w http.ResponseWri
 	case *GetSubscribersInternalServerError:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(500)
+		span.SetStatus(codes.Error, http.StatusText(500))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -136,6 +142,7 @@ func encodeGetSubscribersResponse(response GetSubscribersRes, w http.ResponseWri
 	case *GetSubscribersNotImplemented:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(501)
+		span.SetStatus(codes.Error, http.StatusText(501))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
