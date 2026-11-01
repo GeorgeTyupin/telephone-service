@@ -65,16 +65,16 @@ func (*CreateCallInternalServerError) createCallRes() {}
 
 // Ref: #/components/schemas/CreateCallRequest
 type CreateCallRequest struct {
-	ParticipantIds []int `json:"participant_ids"`
+	ParticipantIDs []int `json:"participant_ids"`
 	// Продолжительность в формате Go, например 1m30s.
 	Duration string `json:"duration"`
 	// Дата и время в формате, принимаемом доменным парсером.
 	CreatedAt string `json:"created_at"`
 }
 
-// GetParticipantIds returns the value of ParticipantIds.
-func (s *CreateCallRequest) GetParticipantIds() []int {
-	return s.ParticipantIds
+// GetParticipantIDs returns the value of ParticipantIDs.
+func (s *CreateCallRequest) GetParticipantIDs() []int {
+	return s.ParticipantIDs
 }
 
 // GetDuration returns the value of Duration.
@@ -87,9 +87,9 @@ func (s *CreateCallRequest) GetCreatedAt() string {
 	return s.CreatedAt
 }
 
-// SetParticipantIds sets the value of ParticipantIds.
-func (s *CreateCallRequest) SetParticipantIds(val []int) {
-	s.ParticipantIds = val
+// SetParticipantIDs sets the value of ParticipantIDs.
+func (s *CreateCallRequest) SetParticipantIDs(val []int) {
+	s.ParticipantIDs = val
 }
 
 // SetDuration sets the value of Duration.
@@ -137,10 +137,6 @@ func (*GetSubscribersBadRequest) getSubscribersRes() {}
 type GetSubscribersInternalServerError Error
 
 func (*GetSubscribersInternalServerError) getSubscribersRes() {}
-
-type GetSubscribersNotImplemented Error
-
-func (*GetSubscribersNotImplemented) getSubscribersRes() {}
 
 type GetSubscribersOKApplicationJSON []Subscriber
 

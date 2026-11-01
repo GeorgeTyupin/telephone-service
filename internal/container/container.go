@@ -7,9 +7,14 @@ import (
 	"telephone-service/internal/config"
 	"telephone-service/internal/db/postgres/migrator"
 	"telephone-service/internal/db/postgres/pool"
+	"telephone-service/internal/repository/postgres"
+	callsservice "telephone-service/internal/service/calls"
+	subscribersservice "telephone-service/internal/service/subscribers"
 	"telephone-service/internal/transport/http/handlers/calls"
-	callsHandler "telephone-service/internal/transport/http/handlers/subscribers"
-	getCallsUC "telephone-service/internal/usecase/calls"
+	"telephone-service/internal/transport/http/handlers/subscribers"
+	"telephone-service/internal/usecase/calls/create_call"
+	"telephone-service/internal/usecase/calls/get_calls"
+	"telephone-service/internal/usecase/subscribers/get_subscribers"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
@@ -25,12 +30,17 @@ type Container struct {
 	meterProvider  *sdkmetric.MeterProvider
 	tracerProvider *sdktrace.TracerProvider
 
-	//handlers
-	callsHandler       *calls.CallsHandler
-	subscribersHandler *callsHandler.SubscribersHandler
+	postgresRepository *postgres.Repository
 
-	//usecases
-	getCallsUsecase *getCallsUC.GetCallsUsecase
+	callsService       *callsservice.Service
+	subscribersService *subscribersservice.Service
+
+	callsHandler       *calls_handlers.CallsHandler
+	subscribersHandler *subscribers_handlers.SubscribersHandler
+
+	getCallsUsecase       *get_calls_uc.GetCallsUsecase
+	createCallUsecase     *create_call_uc.CreateCallUsecase
+	getSubscribersUsecase *get_subscribers_uc.GetSubscribersUsecase
 }
 
 func NewContainer(ctx context.Context) (*Container, error) {

@@ -256,7 +256,7 @@ func (s *CreateCallRequest) encodeFields(e *jx.Encoder) {
 	{
 		e.FieldStart("participant_ids")
 		e.ArrStart()
-		for _, elem := range s.ParticipantIds {
+		for _, elem := range s.ParticipantIDs {
 			e.Int(elem)
 		}
 		e.ArrEnd()
@@ -289,7 +289,7 @@ func (s *CreateCallRequest) Decode(d *jx.Decoder) error {
 		case "participant_ids":
 			requiredBitSet[0] |= 1 << 0
 			if err := func() error {
-				s.ParticipantIds = make([]int, 0)
+				s.ParticipantIDs = make([]int, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
 					var elem int
 					v, err := d.Int()
@@ -297,7 +297,7 @@ func (s *CreateCallRequest) Decode(d *jx.Decoder) error {
 					if err != nil {
 						return err
 					}
-					s.ParticipantIds = append(s.ParticipantIds, elem)
+					s.ParticipantIDs = append(s.ParticipantIDs, elem)
 					return nil
 				}); err != nil {
 					return err
@@ -680,44 +680,6 @@ func (s *GetSubscribersInternalServerError) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *GetSubscribersInternalServerError) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode encodes GetSubscribersNotImplemented as json.
-func (s *GetSubscribersNotImplemented) Encode(e *jx.Encoder) {
-	unwrapped := (*Error)(s)
-
-	unwrapped.Encode(e)
-}
-
-// Decode decodes GetSubscribersNotImplemented from json.
-func (s *GetSubscribersNotImplemented) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode GetSubscribersNotImplemented to nil")
-	}
-	var unwrapped Error
-	if err := func() error {
-		if err := unwrapped.Decode(d); err != nil {
-			return err
-		}
-		return nil
-	}(); err != nil {
-		return errors.Wrap(err, "alias")
-	}
-	*s = GetSubscribersNotImplemented(unwrapped)
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s *GetSubscribersNotImplemented) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *GetSubscribersNotImplemented) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }

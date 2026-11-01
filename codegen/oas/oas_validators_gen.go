@@ -47,7 +47,7 @@ func (s *CreateCallRequest) Validate() error {
 
 	var failures []validate.FieldError
 	if err := func() error {
-		if s.ParticipantIds == nil {
+		if s.ParticipantIDs == nil {
 			return errors.New("nil is invalid value")
 		}
 		if err := (validate.Array{
@@ -55,10 +55,10 @@ func (s *CreateCallRequest) Validate() error {
 			MinLengthSet: true,
 			MaxLength:    0,
 			MaxLengthSet: false,
-		}).ValidateLength(len(s.ParticipantIds)); err != nil {
+		}).ValidateLength(len(s.ParticipantIDs)); err != nil {
 			return errors.Wrap(err, "array")
 		}
-		if err := validate.UniqueItems(s.ParticipantIds); err != nil {
+		if err := validate.UniqueItems(s.ParticipantIDs); err != nil {
 			return errors.Wrap(err, "array")
 		}
 		return nil

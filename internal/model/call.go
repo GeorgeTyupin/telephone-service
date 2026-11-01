@@ -1,9 +1,8 @@
 package model
 
 type Call struct {
-	Id               int
-	FirstSubscriber  Subscriber
-	SecondSubscriber Subscriber
-	Duration         Duration
-	CreatedAt        Time
+	Id           int
+	Participants []Subscriber
+	Duration     Duration
+	CreatedAt    Time
 }

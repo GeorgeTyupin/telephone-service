@@ -3,11 +3,8 @@ info:
   title: API телефонного сервиса
   version: 1.0.0
   description: |
-    HTTP-контракт телефонного сервиса. Прежние URL сохранены.
-    Звонок содержит список участников. Во внутренних моделях используется
-    Subscriber.
-    Наличие операции в контракте не означает, что её бизнес-логика реализована.
-    
+    HTTP API телефонного сервиса для работы со звонками и абонентами.
+
 
 paths:
   /calls:
@@ -27,6 +24,7 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '500':
           $ref: '#/components/responses/InternalError'
+
   /abonets:
     get:
       operationId: getSubscribers
@@ -45,8 +43,7 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '500':
           $ref: '#/components/responses/InternalError'
-        '501':
-          $ref: '#/components/responses/NotImplemented'
+
   /call:
     post:
       operationId: createCall
@@ -72,7 +69,6 @@ paths:
 
 components:
   schemas:
-
     Subscriber:
       type: object
       required: [id, name, phone_number]
@@ -137,14 +133,9 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+
     InternalError:
       description: Внутренняя ошибка сервера
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    NotImplemented:
-      description: Бизнес-логика операции пока не реализована
       content:
         application/json:
           schema:

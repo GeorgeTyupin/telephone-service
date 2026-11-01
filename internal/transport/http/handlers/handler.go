@@ -15,16 +15,16 @@ import (
 var _ api.Handler = (*handler)(nil)
 
 type handler struct {
-	*calls.CallsHandler
-	*subscribers.SubscribersHandler
+	*calls_handlers.CallsHandler
+	*subscribers_handlers.SubscribersHandler
 }
 
 type Option func(*http.ServeMux)
 
 func NewHandler(
 	logger *slog.Logger,
-	callsHandler *calls.CallsHandler,
-	subscribersHandler *subscribers.SubscribersHandler,
+	callsHandler *calls_handlers.CallsHandler,
+	subscribersHandler *subscribers_handlers.SubscribersHandler,
 	opts ...Option,
 ) (http.Handler, error) {
 	apiServer, err := api.NewServer(

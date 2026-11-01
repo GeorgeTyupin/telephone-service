@@ -1,0 +1,13 @@
+version: "2"
+sql:
+  - engine: postgresql
+    schema: migrations
+    queries: internal/repository/postgres/queries
+    gen:
+      go:
+        package: record
+        out: internal/repository/postgres/record
+        sql_package: pgx/v5
+        emit_empty_slices: true
+        rename:
+          subscriber_ids: SubscriberIDs

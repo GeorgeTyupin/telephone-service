@@ -7,22 +7,27 @@ import (
 )
 
 type apiHandler struct {
-	*calls.CallsHandler
-	*subscribers.SubscribersHandler
+	*calls_handlers.CallsHandler
+	*subscribers_handlers.SubscribersHandler
 }
 
 var _ api.Handler = (*apiHandler)(nil)
 
-func (c *Container) ResolveCallsHandler() *calls.CallsHandler {
+func (c *Container) ResolveCallsHandler() *calls_handlers.CallsHandler {
 	if c.callsHandler == nil {
-		c.callsHandler = calls.NewCallsHandler(c.ResolveGetCallsUsecase())
+		c.callsHandler = calls_handlers.NewCallsHandler(
+			c.ResolveGetCallsUsecase(),
+			c.ResolveCreateCallUsecase(),
+		)
 	}
+
 	return c.callsHandler
 }
 
-func (c *Container) ResolveSubscribersHandler() *subscribers.SubscribersHandler {
+func (c *Container) ResolveSubscribersHandler() *subscribers_handlers.SubscribersHandler {
 	if c.subscribersHandler == nil {
-		c.subscribersHandler = subscribers.NewSubscribersHandler()
+		c.subscribersHandler = subscribers_handlers.NewSubscribersHandler(c.ResolveGetSubscribersUsecase())
 	}
+
 	return c.subscribersHandler
 }
