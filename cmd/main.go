@@ -12,10 +12,9 @@ import (
 
 func main() {
 	const op = "main.main"
-	logger := slog.Default().With(slog.String("operation", op))
 
 	if err := run(); err != nil {
-		logger.Error("Ошибка работы приложения", slog.String("error", err.Error()))
+		slog.Default().With(slog.String("operation", op)).Error("Ошибка работы приложения", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
 }
@@ -24,13 +23,11 @@ func run() error {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
-	c := container.NewContainer(ctx)
-	defer c.Stop()
-
-	server, err := c.BuildApi()
+	c, err := container.NewContainer(ctx)
 	if err != nil {
 		return err
 	}
+	defer c.Stop()
 
-	return server.Run(ctx)
+	return c.Run(ctx)
 }

@@ -2,8 +2,8 @@ package container
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
-	"os"
 	"telephone-service/internal/config"
 	"telephone-service/internal/db/postgres/migrator"
 	"telephone-service/internal/db/postgres/pool"
@@ -12,6 +12,8 @@ import (
 	getCallsUC "telephone-service/internal/usecase/calls"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
 type Container struct {
@@ -19,6 +21,9 @@ type Container struct {
 	logger *slog.Logger
 
 	dbPool *pgxpool.Pool
+
+	meterProvider  *sdkmetric.MeterProvider
+	tracerProvider *sdktrace.TracerProvider
 
 	//handlers
 	callsHandler       *calls.CallsHandler
@@ -28,32 +33,59 @@ type Container struct {
 	getCallsUsecase *getCallsUC.GetCallsUsecase
 }
 
-func NewContainer(ctx context.Context) *Container {
-	const op = "container.NewContainer"
-	baseLogger := slog.New(slog.NewTextHandler(os.Stdout, nil))
-	logger := baseLogger.With(slog.String("operation", op))
-
+func NewContainer(ctx context.Context) (*Container, error) {
 	cfg := config.MustLoad()
+	c := &Container{
+		config: cfg,
+		logger: slog.Default(),
+	}
+	ready := false
+	defer func() {
+		if !ready {
+			c.Stop()
+		}
+	}()
+	if err := c.initTelemetry(ctx); err != nil {
+		return nil, fmt.Errorf("инициализация телеметрии: %w", err)
+	}
 
 	poolInitCtx, cancel := context.WithTimeout(ctx, cfg.Database.InitTimeout)
 	defer cancel()
 	dbPool := pool.NewPgxPool(poolInitCtx, cfg.Database.GetConnectionString())
+	c.dbPool = dbPool
 
 	migrationsCtx, cancel := context.WithTimeout(ctx, cfg.Database.MigrationsTimeout)
 	defer cancel()
-	if err := migrator.Run(migrationsCtx, dbPool); err != nil {
-		logger.Error("Ошибка выполнения миграции", slog.String("error", err.Error()))
-		os.Exit(1)
+	if err := migrator.Run(migrationsCtx, c.dbPool); err != nil {
+		return nil, fmt.Errorf("применение миграций: %w", err)
 	}
 
-	return &Container{
-		config: cfg,
-		logger: baseLogger,
+	ready = true
+	return c, nil
+}
 
-		dbPool: dbPool,
+func (c *Container) Run(ctx context.Context) error {
+	apiServer, err := c.BuildApi()
+	if err != nil {
+		return err
 	}
+	return apiServer.Run(ctx)
 }
 
 func (c *Container) Stop() {
-	c.dbPool.Close()
+	if c.dbPool != nil {
+		c.dbPool.Close()
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), c.config.Telemetry.ShutdownTimeout)
+	defer cancel()
+	if c.tracerProvider != nil {
+		if err := c.tracerProvider.Shutdown(ctx); err != nil {
+			c.logger.ErrorContext(ctx, "Не удалось завершить tracing", slog.Any("error", err))
+		}
+	}
+	if c.meterProvider != nil {
+		if err := c.meterProvider.Shutdown(ctx); err != nil {
+			c.logger.ErrorContext(ctx, "Не удалось завершить metrics", slog.Any("error", err))
+		}
+	}
 }
