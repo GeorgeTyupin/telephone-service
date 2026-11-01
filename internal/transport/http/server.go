@@ -8,9 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	api "telephone-service/codegen/oas"
 	"telephone-service/internal/config"
-	"telephone-service/internal/transport/http/handlers"
 )
 
 type Server struct {
@@ -19,24 +17,16 @@ type Server struct {
 	shutdownTimeout time.Duration
 }
 
-func NewServer(logger *slog.Logger, cfg config.Server, handler api.Handler) (*Server, error) {
-	apiServer, err := api.NewServer(
-		handler,
-		api.WithErrorHandler(handlers.NewErrorHandler(logger)),
-	)
-	if err != nil {
-		return nil, fmt.Errorf("не удалось создать API-сервер: %w", err)
-	}
-
+func NewServer(logger *slog.Logger, cfg config.Server, handler http.Handler) *Server {
 	return &Server{
 		logger: logger,
 		server: &http.Server{
 			Addr:              cfg.Addr,
-			Handler:           apiServer,
+			Handler:           handler,
 			ReadHeaderTimeout: cfg.ReadHeaderTimeout,
 		},
 		shutdownTimeout: cfg.ShutdownTimeout,
-	}, nil
+	}
 }
 
 func (s *Server) Run(ctx context.Context) error {

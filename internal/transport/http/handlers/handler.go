@@ -1,6 +1,12 @@
 package handlers
 
 import (
+	"fmt"
+	"log/slog"
+	"net/http"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+
 	api "telephone-service/codegen/oas"
 	"telephone-service/internal/transport/http/handlers/calls"
 	"telephone-service/internal/transport/http/handlers/subscribers"
@@ -13,12 +19,43 @@ type handler struct {
 	*subscribers.SubscribersHandler
 }
 
+type Option func(*http.ServeMux)
+
 func NewHandler(
+	logger *slog.Logger,
 	callsHandler *calls.CallsHandler,
 	subscribersHandler *subscribers.SubscribersHandler,
-) api.Handler {
-	return &handler{
-		CallsHandler:       callsHandler,
-		SubscribersHandler: subscribersHandler,
+	opts ...Option,
+) (http.Handler, error) {
+	apiServer, err := api.NewServer(
+		&handler{
+			CallsHandler:       callsHandler,
+			SubscribersHandler: subscribersHandler,
+		},
+		api.WithErrorHandler(NewErrorHandler(logger)),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("не удалось создать API-сервер: %w", err)
+	}
+
+	mux := http.NewServeMux()
+	mux.Handle("/", apiServer)
+	for _, opt := range opts {
+		opt(mux)
+	}
+	return mux, nil
+}
+
+func WithPing() Option {
+	return func(mux *http.ServeMux) {
+		mux.HandleFunc("GET /ping", func(w http.ResponseWriter, _ *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		})
+	}
+}
+
+func WithMetrics() Option {
+	return func(mux *http.ServeMux) {
+		mux.Handle("GET /metrics", promhttp.Handler())
 	}
 }
