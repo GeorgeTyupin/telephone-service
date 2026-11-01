@@ -6,6 +6,8 @@ info:
     HTTP-контракт телефонного сервиса. Для совместимости сохранены прежние
     URL и имена JSON-полей. Во внутренних моделях используется Subscriber.
     Наличие операции в контракте не означает, что её бизнес-логика реализована.
+    
+
 paths:
   /calls:
     get:
@@ -62,6 +64,8 @@ paths:
           $ref: '#/components/responses/InternalError'
         '501':
           $ref: '#/components/responses/NotImplemented'
+
+
 components:
   schemas:
     Subscriber:
