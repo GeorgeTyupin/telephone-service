@@ -2,20 +2,15 @@ package pool
 
 import (
 	"context"
-	"log/slog"
-	"os"
+	"fmt"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func NewPgxPool(ctx context.Context, connString string) *pgxpool.Pool {
-	const op = "pool.NewPgxPool"
-	logger := slog.Default().With(slog.String("operation", op))
-
+func NewPgxPool(ctx context.Context, connString string) (*pgxpool.Pool, error) {
 	pool, err := pgxpool.New(ctx, connString)
 	if err != nil {
-		logger.Error("Не удалось создать пул", slog.String("error", err.Error()))
-		os.Exit(1)
+		return nil, fmt.Errorf("создание пула PostgreSQL: %w", err)
 	}
-	return pool
+	return pool, nil
 }

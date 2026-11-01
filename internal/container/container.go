@@ -51,7 +51,10 @@ func NewContainer(ctx context.Context) (*Container, error) {
 
 	poolInitCtx, cancel := context.WithTimeout(ctx, cfg.Database.InitTimeout)
 	defer cancel()
-	dbPool := pool.NewPgxPool(poolInitCtx, cfg.Database.GetConnectionString())
+	dbPool, err := pool.NewPgxPool(poolInitCtx, cfg.Database.GetConnectionString())
+	if err != nil {
+		return nil, err
+	}
 	c.dbPool = dbPool
 
 	migrationsCtx, cancel := context.WithTimeout(ctx, cfg.Database.MigrationsTimeout)
