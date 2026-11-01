@@ -35,7 +35,7 @@ func (c *codeRecorder) Unwrap() http.ResponseWriter {
 
 // handleCreateCallRequest handles createCall operation.
 //
-// Бизнес-логика операции пока не реализована.
+// Создать звонок.
 //
 // POST /call
 func (s *Server) handleCreateCallRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {

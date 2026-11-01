@@ -3,8 +3,9 @@ info:
   title: API телефонного сервиса
   version: 1.0.0
   description: |
-    HTTP-контракт телефонного сервиса. Для совместимости сохранены прежние
-    URL и имена JSON-полей. Во внутренних моделях используется Subscriber.
+    HTTP-контракт телефонного сервиса. Прежние URL сохранены.
+    Звонок содержит список участников. Во внутренних моделях используется
+    Subscriber.
     Наличие операции в контракте не означает, что её бизнес-логика реализована.
     
 
@@ -50,7 +51,6 @@ paths:
     post:
       operationId: createCall
       summary: Создать звонок
-      description: Бизнес-логика операции пока не реализована.
       requestBody:
         required: true
         content:
@@ -58,16 +58,21 @@ paths:
             schema:
               $ref: '#/components/schemas/CreateCallRequest'
       responses:
+        '201':
+          description: Созданный звонок
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Call'
         '400':
           $ref: '#/components/responses/BadRequest'
         '500':
           $ref: '#/components/responses/InternalError'
-        '501':
-          $ref: '#/components/responses/NotImplemented'
 
 
 components:
   schemas:
+
     Subscriber:
       type: object
       required: [id, name, phone_number]
@@ -78,21 +83,18 @@ components:
           type: string
         phone_number:
           type: string
+
     Call:
       type: object
-      x-ogen-properties:
-        first_abonent:
-          name: FirstSubscriber
-        second_abonent:
-          name: SecondSubscriber
-      required: [id, first_abonent, second_abonent, duration, created_at]
+      required: [id, participants, duration, created_at]
       properties:
         id:
           type: integer
-        first_abonent:
-          type: string
-        second_abonent:
-          type: string
+        participants:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/Subscriber'
         duration:
           type: string
           description: Продолжительность в формате Go, например 1m30s.
@@ -100,27 +102,27 @@ components:
           type: string
           description: >-
             Прежнее текстовое представление времени без ограничения RFC 3339.
+
     CreateCallRequest:
       type: object
       x-ogen-properties:
-        first_abonent:
-          name: FirstSubscriber
-        second_abonent:
-          name: SecondSubscriber
-      required: [id, first_abonent, second_abonent, duration, created_at]
+        participant_ids:
+          name: ParticipantIDs
+      required: [participant_ids, duration, created_at]
       properties:
-        id:
-          type: integer
-        first_abonent:
-          type: string
-        second_abonent:
-          type: string
+        participant_ids:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            type: integer
         duration:
           type: string
           description: Продолжительность в формате Go, например 1m30s.
         created_at:
           type: string
           description: Дата и время в формате, принимаемом доменным парсером.
+
     Error:
       type: object
       description: Штатный формат ошибки HTTP-сервера ogen.

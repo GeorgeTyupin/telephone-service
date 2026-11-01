@@ -10,7 +10,7 @@ import (
 type Handler interface {
 	// CreateCall implements createCall operation.
 	//
-	// Бизнес-логика операции пока не реализована.
+	// Создать звонок.
 	//
 	// POST /call
 	CreateCall(ctx context.Context, req *CreateCallRequest) (CreateCallRes, error)

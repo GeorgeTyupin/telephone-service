@@ -13,6 +13,18 @@ import (
 
 func encodeCreateCallResponse(response CreateCallRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
+	case *Call:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(201)
+
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
 	case *CreateCallBadRequest:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(400)
@@ -29,19 +41,6 @@ func encodeCreateCallResponse(response CreateCallRes, w http.ResponseWriter, spa
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(500)
 		span.SetStatus(codes.Error, http.StatusText(500))
-
-		e := new(jx.Encoder)
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
-
-		return nil
-
-	case *CreateCallNotImplemented:
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		w.WriteHeader(501)
-		span.SetStatus(codes.Error, http.StatusText(501))
 
 		e := new(jx.Encoder)
 		response.Encode(e)

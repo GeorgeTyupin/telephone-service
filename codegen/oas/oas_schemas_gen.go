@@ -4,9 +4,8 @@ package api
 
 // Ref: #/components/schemas/Call
 type Call struct {
-	ID               int    `json:"id"`
-	FirstSubscriber  string `json:"first_abonent"`
-	SecondSubscriber string `json:"second_abonent"`
+	ID           int          `json:"id"`
+	Participants []Subscriber `json:"participants"`
 	// Продолжительность в формате Go, например 1m30s.
 	Duration string `json:"duration"`
 	// Прежнее текстовое представление времени без
@@ -19,14 +18,9 @@ func (s *Call) GetID() int {
 	return s.ID
 }
 
-// GetFirstSubscriber returns the value of FirstSubscriber.
-func (s *Call) GetFirstSubscriber() string {
-	return s.FirstSubscriber
-}
-
-// GetSecondSubscriber returns the value of SecondSubscriber.
-func (s *Call) GetSecondSubscriber() string {
-	return s.SecondSubscriber
+// GetParticipants returns the value of Participants.
+func (s *Call) GetParticipants() []Subscriber {
+	return s.Participants
 }
 
 // GetDuration returns the value of Duration.
@@ -44,14 +38,9 @@ func (s *Call) SetID(val int) {
 	s.ID = val
 }
 
-// SetFirstSubscriber sets the value of FirstSubscriber.
-func (s *Call) SetFirstSubscriber(val string) {
-	s.FirstSubscriber = val
-}
-
-// SetSecondSubscriber sets the value of SecondSubscriber.
-func (s *Call) SetSecondSubscriber(val string) {
-	s.SecondSubscriber = val
+// SetParticipants sets the value of Participants.
+func (s *Call) SetParticipants(val []Subscriber) {
+	s.Participants = val
 }
 
 // SetDuration sets the value of Duration.
@@ -64,6 +53,8 @@ func (s *Call) SetCreatedAt(val string) {
 	s.CreatedAt = val
 }
 
+func (*Call) createCallRes() {}
+
 type CreateCallBadRequest Error
 
 func (*CreateCallBadRequest) createCallRes() {}
@@ -72,34 +63,18 @@ type CreateCallInternalServerError Error
 
 func (*CreateCallInternalServerError) createCallRes() {}
 
-type CreateCallNotImplemented Error
-
-func (*CreateCallNotImplemented) createCallRes() {}
-
 // Ref: #/components/schemas/CreateCallRequest
 type CreateCallRequest struct {
-	ID               int    `json:"id"`
-	FirstSubscriber  string `json:"first_abonent"`
-	SecondSubscriber string `json:"second_abonent"`
+	ParticipantIds []int `json:"participant_ids"`
 	// Продолжительность в формате Go, например 1m30s.
 	Duration string `json:"duration"`
 	// Дата и время в формате, принимаемом доменным парсером.
 	CreatedAt string `json:"created_at"`
 }
 
-// GetID returns the value of ID.
-func (s *CreateCallRequest) GetID() int {
-	return s.ID
-}
-
-// GetFirstSubscriber returns the value of FirstSubscriber.
-func (s *CreateCallRequest) GetFirstSubscriber() string {
-	return s.FirstSubscriber
-}
-
-// GetSecondSubscriber returns the value of SecondSubscriber.
-func (s *CreateCallRequest) GetSecondSubscriber() string {
-	return s.SecondSubscriber
+// GetParticipantIds returns the value of ParticipantIds.
+func (s *CreateCallRequest) GetParticipantIds() []int {
+	return s.ParticipantIds
 }
 
 // GetDuration returns the value of Duration.
@@ -112,19 +87,9 @@ func (s *CreateCallRequest) GetCreatedAt() string {
 	return s.CreatedAt
 }
 
-// SetID sets the value of ID.
-func (s *CreateCallRequest) SetID(val int) {
-	s.ID = val
-}
-
-// SetFirstSubscriber sets the value of FirstSubscriber.
-func (s *CreateCallRequest) SetFirstSubscriber(val string) {
-	s.FirstSubscriber = val
-}
-
-// SetSecondSubscriber sets the value of SecondSubscriber.
-func (s *CreateCallRequest) SetSecondSubscriber(val string) {
-	s.SecondSubscriber = val
+// SetParticipantIds sets the value of ParticipantIds.
+func (s *CreateCallRequest) SetParticipantIds(val []int) {
+	s.ParticipantIds = val
 }
 
 // SetDuration sets the value of Duration.

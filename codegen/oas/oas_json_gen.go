@@ -25,12 +25,12 @@ func (s *Call) encodeFields(e *jx.Encoder) {
 		e.Int(s.ID)
 	}
 	{
-		e.FieldStart("first_abonent")
-		e.Str(s.FirstSubscriber)
-	}
-	{
-		e.FieldStart("second_abonent")
-		e.Str(s.SecondSubscriber)
+		e.FieldStart("participants")
+		e.ArrStart()
+		for _, elem := range s.Participants {
+			elem.Encode(e)
+		}
+		e.ArrEnd()
 	}
 	{
 		e.FieldStart("duration")
@@ -42,12 +42,11 @@ func (s *Call) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfCall = [5]string{
+var jsonFieldsNameOfCall = [4]string{
 	0: "id",
-	1: "first_abonent",
-	2: "second_abonent",
-	3: "duration",
-	4: "created_at",
+	1: "participants",
+	2: "duration",
+	3: "created_at",
 }
 
 // Decode decodes Call from json.
@@ -71,32 +70,26 @@ func (s *Call) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"id\"")
 			}
-		case "first_abonent":
+		case "participants":
 			requiredBitSet[0] |= 1 << 1
 			if err := func() error {
-				v, err := d.Str()
-				s.FirstSubscriber = string(v)
-				if err != nil {
+				s.Participants = make([]Subscriber, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem Subscriber
+					if err := elem.Decode(d); err != nil {
+						return err
+					}
+					s.Participants = append(s.Participants, elem)
+					return nil
+				}); err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"first_abonent\"")
-			}
-		case "second_abonent":
-			requiredBitSet[0] |= 1 << 2
-			if err := func() error {
-				v, err := d.Str()
-				s.SecondSubscriber = string(v)
-				if err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"second_abonent\"")
+				return errors.Wrap(err, "decode field \"participants\"")
 			}
 		case "duration":
-			requiredBitSet[0] |= 1 << 3
+			requiredBitSet[0] |= 1 << 2
 			if err := func() error {
 				v, err := d.Str()
 				s.Duration = string(v)
@@ -108,7 +101,7 @@ func (s *Call) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"duration\"")
 			}
 		case "created_at":
-			requiredBitSet[0] |= 1 << 4
+			requiredBitSet[0] |= 1 << 3
 			if err := func() error {
 				v, err := d.Str()
 				s.CreatedAt = string(v)
@@ -129,7 +122,7 @@ func (s *Call) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00011111,
+		0b00001111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -251,44 +244,6 @@ func (s *CreateCallInternalServerError) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
-// Encode encodes CreateCallNotImplemented as json.
-func (s *CreateCallNotImplemented) Encode(e *jx.Encoder) {
-	unwrapped := (*Error)(s)
-
-	unwrapped.Encode(e)
-}
-
-// Decode decodes CreateCallNotImplemented from json.
-func (s *CreateCallNotImplemented) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode CreateCallNotImplemented to nil")
-	}
-	var unwrapped Error
-	if err := func() error {
-		if err := unwrapped.Decode(d); err != nil {
-			return err
-		}
-		return nil
-	}(); err != nil {
-		return errors.Wrap(err, "alias")
-	}
-	*s = CreateCallNotImplemented(unwrapped)
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s *CreateCallNotImplemented) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *CreateCallNotImplemented) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
 // Encode implements json.Marshaler.
 func (s *CreateCallRequest) Encode(e *jx.Encoder) {
 	e.ObjStart()
@@ -299,16 +254,12 @@ func (s *CreateCallRequest) Encode(e *jx.Encoder) {
 // encodeFields encodes fields.
 func (s *CreateCallRequest) encodeFields(e *jx.Encoder) {
 	{
-		e.FieldStart("id")
-		e.Int(s.ID)
-	}
-	{
-		e.FieldStart("first_abonent")
-		e.Str(s.FirstSubscriber)
-	}
-	{
-		e.FieldStart("second_abonent")
-		e.Str(s.SecondSubscriber)
+		e.FieldStart("participant_ids")
+		e.ArrStart()
+		for _, elem := range s.ParticipantIds {
+			e.Int(elem)
+		}
+		e.ArrEnd()
 	}
 	{
 		e.FieldStart("duration")
@@ -320,12 +271,10 @@ func (s *CreateCallRequest) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfCreateCallRequest = [5]string{
-	0: "id",
-	1: "first_abonent",
-	2: "second_abonent",
-	3: "duration",
-	4: "created_at",
+var jsonFieldsNameOfCreateCallRequest = [3]string{
+	0: "participant_ids",
+	1: "duration",
+	2: "created_at",
 }
 
 // Decode decodes CreateCallRequest from json.
@@ -337,44 +286,28 @@ func (s *CreateCallRequest) Decode(d *jx.Decoder) error {
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
-		case "id":
+		case "participant_ids":
 			requiredBitSet[0] |= 1 << 0
 			if err := func() error {
-				v, err := d.Int()
-				s.ID = int(v)
-				if err != nil {
+				s.ParticipantIds = make([]int, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem int
+					v, err := d.Int()
+					elem = int(v)
+					if err != nil {
+						return err
+					}
+					s.ParticipantIds = append(s.ParticipantIds, elem)
+					return nil
+				}); err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"id\"")
-			}
-		case "first_abonent":
-			requiredBitSet[0] |= 1 << 1
-			if err := func() error {
-				v, err := d.Str()
-				s.FirstSubscriber = string(v)
-				if err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"first_abonent\"")
-			}
-		case "second_abonent":
-			requiredBitSet[0] |= 1 << 2
-			if err := func() error {
-				v, err := d.Str()
-				s.SecondSubscriber = string(v)
-				if err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"second_abonent\"")
+				return errors.Wrap(err, "decode field \"participant_ids\"")
 			}
 		case "duration":
-			requiredBitSet[0] |= 1 << 3
+			requiredBitSet[0] |= 1 << 1
 			if err := func() error {
 				v, err := d.Str()
 				s.Duration = string(v)
@@ -386,7 +319,7 @@ func (s *CreateCallRequest) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"duration\"")
 			}
 		case "created_at":
-			requiredBitSet[0] |= 1 << 4
+			requiredBitSet[0] |= 1 << 2
 			if err := func() error {
 				v, err := d.Str()
 				s.CreatedAt = string(v)
@@ -407,7 +340,7 @@ func (s *CreateCallRequest) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00011111,
+		0b00000111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
