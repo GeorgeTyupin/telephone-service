@@ -3,7 +3,7 @@ package calls
 import (
 	"context"
 	"log/slog"
-	"telephone-service/internal/domain"
+	"telephone-service/internal/model"
 )
 
 type GetCallsUsecase struct {
@@ -16,6 +16,6 @@ func NewGetCallsUsecase(logger *slog.Logger) *GetCallsUsecase {
 	}
 }
 
-func (uc *GetCallsUsecase) Execute(_ context.Context) ([]domain.Call, error) {
-	return []domain.Call{}, nil
+func (uc *GetCallsUsecase) Execute(_ context.Context) ([]model.Call, error) {
+	return []model.Call{}, nil
 }

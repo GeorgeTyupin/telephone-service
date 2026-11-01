@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 	"telephone-service/codegen/oas"
-	"telephone-service/internal/domain"
+	"telephone-service/internal/model"
 	"telephone-service/internal/transport/http/mapper"
 )
 
 type GetCallsUsecase interface {
-	Execute(ctx context.Context) ([]domain.Call, error)
+	Execute(ctx context.Context) ([]model.Call, error)
 }
 
 type CallsHandler struct {
