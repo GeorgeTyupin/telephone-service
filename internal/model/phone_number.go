@@ -30,9 +30,8 @@ func StringToPhoneNumber(phoneNumberStr string) (PhoneNumber, error) {
 }
 
 func PhoneNumberToString(phoneNumber PhoneNumber) string {
-	numberStr := strconv.FormatUint(phoneNumber.Number, 10)
+	numberStr := fmt.Sprintf("%010d", phoneNumber.Number)
 
-	//987  654    32     10
 	part1, part2, part3, part4 := numberStr[:3], numberStr[3:6], numberStr[6:8], numberStr[8:]
 	return fmt.Sprintf("+%d (%s) %s-%s-%s",
 		phoneNumber.CountryCode,

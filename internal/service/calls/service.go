@@ -3,6 +3,7 @@ package calls
 import (
 	"context"
 	"fmt"
+	"strings"
 	"telephone-service/internal/model"
 )
 
@@ -27,14 +28,17 @@ func (s *Service) CreateCall(ctx context.Context, call model.Call) (model.Call, 
 		return model.Call{}, fmt.Errorf("%w: нужен хотя бы один участник", model.ErrInvalidCall)
 	}
 
-	participants := make(map[int]struct{}, len(call.Participants))
+	participants := make(map[model.PhoneNumber]struct{}, len(call.Participants))
 	for _, participant := range call.Participants {
-		id := participant.Id
-		if _, exists := participants[id]; exists {
-			return model.Call{}, fmt.Errorf("%w: участник %d указан повторно", model.ErrInvalidCall, id)
+		if strings.TrimSpace(participant.Name) == "" {
+			return model.Call{}, fmt.Errorf("%w: имя участника не может быть пустым", model.ErrInvalidCall)
 		}
 
-		participants[id] = struct{}{}
+		if _, exists := participants[participant.PhoneNumber]; exists {
+			return model.Call{}, fmt.Errorf("%w: участник с телефоном %s указан повторно", model.ErrInvalidCall, model.PhoneNumberToString(participant.PhoneNumber))
+		}
+
+		participants[participant.PhoneNumber] = struct{}{}
 	}
 
 	return s.repository.CreateCall(ctx, call)

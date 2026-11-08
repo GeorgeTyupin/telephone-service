@@ -39,7 +39,7 @@ func (h *CallsHandler) CreateCall(ctx context.Context, request *api.CreateCallRe
 
 	createdCall, err := h.createCallUsecase.Execute(ctx, call)
 	if err != nil {
-		if errors.Is(err, model.ErrInvalidCall) || errors.Is(err, model.ErrSubscriberNotFound) {
+		if errors.Is(err, model.ErrInvalidCall) {
 			return &api.CreateCallBadRequest{ErrorMessage: err.Error()}, nil
 		}
 

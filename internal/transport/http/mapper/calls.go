@@ -17,9 +17,14 @@ func CallFromRequest(call api.CreateCallRequest) (model.Call, error) {
 		return model.Call{}, fmt.Errorf("не удалось преобразовать время создания звонка: %w", err)
 	}
 
-	participants := make([]model.Subscriber, len(call.ParticipantIDs))
-	for i, id := range call.ParticipantIDs {
-		participants[i] = model.Subscriber{Id: id}
+	participants := make([]model.Subscriber, len(call.Participants))
+	for i, participant := range call.Participants {
+		subscriber, err := SubscriberFromRequest(participant)
+		if err != nil {
+			return model.Call{}, fmt.Errorf("не удалось преобразовать участника %d: %w", i+1, err)
+		}
+
+		participants[i] = subscriber
 	}
 
 	return model.Call{

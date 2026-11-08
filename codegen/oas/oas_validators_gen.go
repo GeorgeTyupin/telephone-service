@@ -40,6 +40,64 @@ func (s *Call) Validate() error {
 	return nil
 }
 
+func (s *CreateCallParticipant) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
+	var failures []validate.FieldError
+	if err := func() error {
+		if err := (validate.String{
+			MinLength:     1,
+			MinLengthSet:  true,
+			MaxLength:     0,
+			MaxLengthSet:  false,
+			Email:         false,
+			Hostname:      false,
+			Regex:         nil,
+			MinNumeric:    0,
+			MinNumericSet: false,
+			MaxNumeric:    0,
+			MaxNumericSet: false,
+		}).Validate(string(s.Name)); err != nil {
+			return errors.Wrap(err, "string")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "name",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		if err := (validate.String{
+			MinLength:     1,
+			MinLengthSet:  true,
+			MaxLength:     0,
+			MaxLengthSet:  false,
+			Email:         false,
+			Hostname:      false,
+			Regex:         nil,
+			MinNumeric:    0,
+			MinNumericSet: false,
+			MaxNumeric:    0,
+			MaxNumericSet: false,
+		}).Validate(string(s.PhoneNumber)); err != nil {
+			return errors.Wrap(err, "string")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "phone_number",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
 func (s *CreateCallRequest) Validate() error {
 	if s == nil {
 		return validate.ErrNilPointer
@@ -47,7 +105,7 @@ func (s *CreateCallRequest) Validate() error {
 
 	var failures []validate.FieldError
 	if err := func() error {
-		if s.ParticipantIDs == nil {
+		if s.Participants == nil {
 			return errors.New("nil is invalid value")
 		}
 		if err := (validate.Array{
@@ -55,16 +113,33 @@ func (s *CreateCallRequest) Validate() error {
 			MinLengthSet: true,
 			MaxLength:    0,
 			MaxLengthSet: false,
-		}).ValidateLength(len(s.ParticipantIDs)); err != nil {
+		}).ValidateLength(len(s.Participants)); err != nil {
 			return errors.Wrap(err, "array")
 		}
-		if err := validate.UniqueItems(s.ParticipantIDs); err != nil {
+		if err := validateUniqueCreateCallParticipant(s.Participants); err != nil {
 			return errors.Wrap(err, "array")
+		}
+		var failures []validate.FieldError
+		for i, elem := range s.Participants {
+			if err := func() error {
+				if err := elem.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				failures = append(failures, validate.FieldError{
+					Name:  fmt.Sprintf("[%d]", i),
+					Error: err,
+				})
+			}
+		}
+		if len(failures) > 0 {
+			return &validate.Error{Fields: failures}
 		}
 		return nil
 	}(); err != nil {
 		failures = append(failures, validate.FieldError{
-			Name:  "participant_ids",
+			Name:  "participants",
 			Error: err,
 		})
 	}

@@ -9,6 +9,27 @@ import (
 	"context"
 )
 
+const createSubscribers = `-- name: CreateSubscribers :exec
+insert into abonents (name, phone_number)
+select requested.name, requested.phone_number
+from (
+    select unnest($1::text[]) as name,
+           unnest($2::text[]) as phone_number
+) requested
+order by ltrim(regexp_replace(phone_number, '[^0-9]', '', 'g'), '0')
+on conflict ((ltrim(regexp_replace(phone_number, '[^0-9]', '', 'g'), '0'))) do nothing
+`
+
+type CreateSubscribersParams struct {
+	Names        []string
+	PhoneNumbers []string
+}
+
+func (q *Queries) CreateSubscribers(ctx context.Context, arg CreateSubscribersParams) error {
+	_, err := q.db.Exec(ctx, createSubscribers, arg.Names, arg.PhoneNumbers)
+	return err
+}
+
 const getSubscribers = `-- name: GetSubscribers :many
 select id, name, phone_number
 from abonents
@@ -17,6 +38,37 @@ order by id
 
 func (q *Queries) GetSubscribers(ctx context.Context) ([]Abonent, error) {
 	rows, err := q.db.Query(ctx, getSubscribers)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Abonent{}
+	for rows.Next() {
+		var i Abonent
+		if err := rows.Scan(&i.ID, &i.Name, &i.PhoneNumber); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getSubscribersByPhoneNumbers = `-- name: GetSubscribersByPhoneNumbers :many
+select a.id, a.name, a.phone_number
+from abonents a
+where ltrim(regexp_replace(a.phone_number, '[^0-9]', '', 'g'), '0') in (
+    select ltrim(regexp_replace(requested.phone_number, '[^0-9]', '', 'g'), '0')
+    from unnest($1::text[]) as requested(phone_number)
+)
+order by a.id
+for key share of a
+`
+
+func (q *Queries) GetSubscribersByPhoneNumbers(ctx context.Context, phoneNumbers []string) ([]Abonent, error) {
+	rows, err := q.db.Query(ctx, getSubscribersByPhoneNumbers, phoneNumbers)
 	if err != nil {
 		return nil, err
 	}

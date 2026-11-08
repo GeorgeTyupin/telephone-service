@@ -99,19 +99,30 @@ components:
           description: >-
             Прежнее текстовое представление времени без ограничения RFC 3339.
 
+    CreateCallParticipant:
+      type: object
+      required: [name, phone_number]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        phone_number:
+          type: string
+          minLength: 1
+
     CreateCallRequest:
       type: object
-      x-ogen-properties:
-        participant_ids:
-          name: ParticipantIDs
-      required: [participant_ids, duration, created_at]
+      required: [participants, duration, created_at]
       properties:
-        participant_ids:
+        participants:
           type: array
           minItems: 1
           uniqueItems: true
+          description: >-
+            Абоненты определяются по нормализованному телефону и не должны повторяться.
+            Отсутствующие создаются, данные существующих не изменяются.
           items:
-            type: integer
+            $ref: '#/components/schemas/CreateCallParticipant'
         duration:
           type: string
           description: Продолжительность в формате Go, например 1m30s.

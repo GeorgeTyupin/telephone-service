@@ -44,34 +44,6 @@ func (q *Queries) CreateCall(ctx context.Context, arg CreateCallParams) (Call, e
 	return i, err
 }
 
-const getCallParticipants = `-- name: GetCallParticipants :many
-select a.id, a.name, a.phone_number
-from abonents a
-join call_participants cp on cp.subscriber_id = a.id
-where cp.call_id = $1
-order by a.id
-`
-
-func (q *Queries) GetCallParticipants(ctx context.Context, callID int64) ([]Abonent, error) {
-	rows, err := q.db.Query(ctx, getCallParticipants, callID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []Abonent{}
-	for rows.Next() {
-		var i Abonent
-		if err := rows.Scan(&i.ID, &i.Name, &i.PhoneNumber); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const getCalls = `-- name: GetCalls :many
 select c.id, c.duration, c.created_at,
        a.id as subscriber_id, a.name, a.phone_number

@@ -63,18 +63,47 @@ type CreateCallInternalServerError Error
 
 func (*CreateCallInternalServerError) createCallRes() {}
 
+// Ref: #/components/schemas/CreateCallParticipant
+type CreateCallParticipant struct {
+	Name        string `json:"name"`
+	PhoneNumber string `json:"phone_number"`
+}
+
+// GetName returns the value of Name.
+func (s *CreateCallParticipant) GetName() string {
+	return s.Name
+}
+
+// GetPhoneNumber returns the value of PhoneNumber.
+func (s *CreateCallParticipant) GetPhoneNumber() string {
+	return s.PhoneNumber
+}
+
+// SetName sets the value of Name.
+func (s *CreateCallParticipant) SetName(val string) {
+	s.Name = val
+}
+
+// SetPhoneNumber sets the value of PhoneNumber.
+func (s *CreateCallParticipant) SetPhoneNumber(val string) {
+	s.PhoneNumber = val
+}
+
 // Ref: #/components/schemas/CreateCallRequest
 type CreateCallRequest struct {
-	ParticipantIDs []int `json:"participant_ids"`
+	// Абоненты определяются по нормализованному телефону и
+	// не должны повторяться. Отсутствующие создаются,
+	// данные существующих не изменяются.
+	Participants []CreateCallParticipant `json:"participants"`
 	// Продолжительность в формате Go, например 1m30s.
 	Duration string `json:"duration"`
 	// Дата и время в формате, принимаемом доменным парсером.
 	CreatedAt string `json:"created_at"`
 }
 
-// GetParticipantIDs returns the value of ParticipantIDs.
-func (s *CreateCallRequest) GetParticipantIDs() []int {
-	return s.ParticipantIDs
+// GetParticipants returns the value of Participants.
+func (s *CreateCallRequest) GetParticipants() []CreateCallParticipant {
+	return s.Participants
 }
 
 // GetDuration returns the value of Duration.
@@ -87,9 +116,9 @@ func (s *CreateCallRequest) GetCreatedAt() string {
 	return s.CreatedAt
 }
 
-// SetParticipantIDs sets the value of ParticipantIDs.
-func (s *CreateCallRequest) SetParticipantIDs(val []int) {
-	s.ParticipantIDs = val
+// SetParticipants sets the value of Participants.
+func (s *CreateCallRequest) SetParticipants(val []CreateCallParticipant) {
+	s.Participants = val
 }
 
 // SetDuration sets the value of Duration.

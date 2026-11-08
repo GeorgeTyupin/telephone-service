@@ -6,6 +6,19 @@ import (
 	"telephone-service/internal/repository/postgres/record"
 )
 
+func SubscribersToRecord(subscribers []model.Subscriber) record.CreateSubscribersParams {
+	params := record.CreateSubscribersParams{
+		Names:        make([]string, len(subscribers)),
+		PhoneNumbers: make([]string, len(subscribers)),
+	}
+	for i, subscriber := range subscribers {
+		params.Names[i] = subscriber.Name
+		params.PhoneNumbers[i] = model.PhoneNumberToString(subscriber.PhoneNumber)
+	}
+
+	return params
+}
+
 func SubscriberFromRecord(subscriber record.Abonent) (model.Subscriber, error) {
 	id, err := idFromRecord(subscriber.ID)
 	if err != nil {

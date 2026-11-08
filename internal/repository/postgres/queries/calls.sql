@@ -14,10 +14,3 @@ returning *;
 -- name: AddCallParticipants :exec
 insert into call_participants (call_id, subscriber_id)
 select $1, unnest($2::bigint[]);
-
--- name: GetCallParticipants :many
-select a.*
-from abonents a
-join call_participants cp on cp.subscriber_id = a.id
-where cp.call_id = $1
-order by a.id;

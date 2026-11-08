@@ -2,14 +2,12 @@ package postgres
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"telephone-service/internal/model"
 	"telephone-service/internal/repository/postgres/adapter"
 	"telephone-service/internal/repository/postgres/record"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 )
 
 func (r *Repository) GetCalls(ctx context.Context) ([]model.Call, error) {
@@ -27,62 +25,57 @@ func (r *Repository) GetCalls(ctx context.Context) ([]model.Call, error) {
 }
 
 func (r *Repository) CreateCall(ctx context.Context, call model.Call) (model.Call, error) {
-	participantIDs := make([]int64, len(call.Participants))
-	for i, participant := range call.Participants {
-		participantIDs[i] = int64(participant.Id)
-	}
+	params := adapter.SubscribersToRecord(call.Participants)
+	var createdCall model.Call
 
-	params := adapter.CallToRecord(call)
-	var storedCall record.Call
-	var participants []record.Abonent
-
-	err := pgx.BeginFunc(ctx, r.dbPool, func(tx pgx.Tx) error {
+	err := pgx.BeginTxFunc(ctx, r.dbPool, pgx.TxOptions{IsoLevel: pgx.ReadCommitted}, func(tx pgx.Tx) error {
 		q := r.queries.WithTx(tx)
 
-		var err error
-		storedCall, err = q.CreateCall(ctx, params)
+		if err := q.CreateSubscribers(ctx, params); err != nil {
+			return fmt.Errorf("не удалось создать абонентов: %w", err)
+		}
+
+		storedSubscribers, err := q.GetSubscribersByPhoneNumbers(ctx, params.PhoneNumbers)
+		if err != nil {
+			return fmt.Errorf("не удалось получить участников звонка: %w", err)
+		}
+		if len(storedSubscribers) != len(call.Participants) {
+			return fmt.Errorf("не удалось получить всех участников звонка: ожидалось %d, получено %d", len(call.Participants), len(storedSubscribers))
+		}
+
+		participants := make([]model.Subscriber, len(storedSubscribers))
+		participantIDs := make([]int64, len(storedSubscribers))
+		for i, storedSubscriber := range storedSubscribers {
+			subscriber, err := adapter.SubscriberFromRecord(storedSubscriber)
+			if err != nil {
+				return fmt.Errorf("не удалось преобразовать участника звонка: %w", err)
+			}
+
+			participants[i] = subscriber
+			participantIDs[i] = storedSubscriber.ID
+		}
+
+		storedCall, err := q.CreateCall(ctx, adapter.CallToRecord(call))
 		if err != nil {
 			return fmt.Errorf("не удалось вставить звонок: %w", err)
 		}
 
-		if err = q.AddCallParticipants(ctx, record.AddCallParticipantsParams{
+		createdCall, err = adapter.CallFromRecord(storedCall)
+		if err != nil {
+			return fmt.Errorf("не удалось преобразовать созданный звонок: %w", err)
+		}
+		createdCall.Participants = participants
+
+		if err := q.AddCallParticipants(ctx, record.AddCallParticipantsParams{
 			CallID: storedCall.ID, Column2: participantIDs,
 		}); err != nil {
 			return fmt.Errorf("не удалось вставить участников звонка: %w", err)
 		}
 
-		participants, err = q.GetCallParticipants(ctx, storedCall.ID)
-		if err != nil {
-			return fmt.Errorf("не удалось получить участников созданного звонка: %w", err)
-		}
-
 		return nil
 	})
-
 	if err != nil {
-		if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok {
-			switch {
-			case pgErr.Code == "23503" && pgErr.ConstraintName == "call_participants_subscriber_id_fkey":
-				return model.Call{}, fmt.Errorf("не удалось создать звонок: %w", model.ErrSubscriberNotFound)
-			case pgErr.Code == "23505" && pgErr.ConstraintName == "call_participants_pkey":
-				return model.Call{}, fmt.Errorf("не удалось создать звонок: %w", model.ErrInvalidCall)
-			}
-		}
 		return model.Call{}, fmt.Errorf("не удалось создать звонок в транзакции: %w", err)
-	}
-
-	createdCall, err := adapter.CallFromRecord(storedCall)
-	if err != nil {
-		return model.Call{}, fmt.Errorf("не удалось преобразовать созданный звонок: %w", err)
-	}
-
-	for _, participant := range participants {
-		subscriber, err := adapter.SubscriberFromRecord(participant)
-		if err != nil {
-			return model.Call{}, fmt.Errorf("не удалось преобразовать участника созданного звонка: %w", err)
-		}
-
-		createdCall.Participants = append(createdCall.Participants, subscriber)
 	}
 
 	return createdCall, nil
