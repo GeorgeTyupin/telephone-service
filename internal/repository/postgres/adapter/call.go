@@ -16,7 +16,7 @@ func CallUpdateToRecord(update model.CallUpdate) record.UpdateCallParams {
 	}
 
 	return record.UpdateCallParams{
-		ID:         int64(update.Call.Id),
+		CallID:     int64(update.Call.Id),
 		Version:    update.Call.Version,
 		Status:     string(update.Call.Status),
 		Duration:   pgtype.Interval{Microseconds: int64(time.Duration(duration) / time.Microsecond), Valid: true},

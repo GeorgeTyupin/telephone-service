@@ -11,3 +11,4 @@ sql:
         emit_empty_slices: true
         rename:
           subscriber_ids: SubscriberIDs
+          participation_ids: ParticipationIDs

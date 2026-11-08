@@ -31,9 +31,10 @@ func (s *ConfigSuite) SetupTest() {
 	s.T().Cleanup(func() { _ = os.Chdir(oldDir) })
 }
 
-func (s *ConfigSuite) TestMustLoad() {
+func (s *ConfigSuite) TestLoad_ReturnsConfiguredValues() {
 	//act
-	config := MustLoad()
+	config, err := Load()
+	require.NoError(s.T(), err)
 
 	//assert
 	assert.NotEmpty(s.T(), config)
@@ -44,7 +45,8 @@ func (s *ConfigSuite) TestMustLoad() {
 
 func (s *ConfigSuite) TestDatabase_GetConnectionString() {
 	//arrange
-	config := MustLoad()
+	config, err := Load()
+	require.NoError(s.T(), err)
 
 	//act
 	connectionString := config.Database.GetConnectionString()

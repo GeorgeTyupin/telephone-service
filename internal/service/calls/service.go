@@ -56,6 +56,10 @@ func (s *Service) StartCall(ctx context.Context, call model.Call) (model.Call, e
 			return model.Call{}, fmt.Errorf("%w: имя участника не может быть пустым", model.ErrInvalidCall)
 		}
 
+		if strings.ContainsRune(participant.Name, '\x00') {
+			return model.Call{}, fmt.Errorf("%w: имя участника не может содержать нулевой символ", model.ErrInvalidCall)
+		}
+
 		if _, exists := participants[participant.PhoneNumber]; exists {
 			return model.Call{}, fmt.Errorf("%w: участник с телефоном %s указан повторно", model.ErrInvalidCall, model.PhoneNumberToString(participant.PhoneNumber))
 		}
@@ -186,6 +190,9 @@ func newCallUpdate(call model.Call) *model.CallUpdate {
 	for _, participation := range call.Participations {
 		if time.Time(changedAt).Before(time.Time(participation.JoinedAt)) {
 			changedAt = participation.JoinedAt
+		}
+		if participation.LeftAt != nil && time.Time(changedAt).Before(time.Time(*participation.LeftAt)) {
+			changedAt = *participation.LeftAt
 		}
 	}
 

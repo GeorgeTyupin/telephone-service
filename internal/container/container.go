@@ -58,7 +58,11 @@ type Container struct {
 }
 
 func NewContainer(ctx context.Context) (*Container, error) {
-	cfg := config.MustLoad()
+	cfg, err := config.Load()
+	if err != nil {
+		return nil, fmt.Errorf("загрузка конфигурации: %w", err)
+	}
+
 	c := &Container{
 		config: cfg,
 		logger: slog.Default(),

@@ -14,5 +14,5 @@ create table calls (
 );
 
 -- +goose Down
-drop table abonents;
 drop table calls;
+drop table abonents;

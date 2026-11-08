@@ -18,12 +18,12 @@ on conflict (call_id, subscriber_id) do nothing
 `
 
 type AddCallParticipantsParams struct {
-	CallID  int64
-	Column2 []int64
+	CallID        int64
+	SubscriberIDs []int64
 }
 
 func (q *Queries) AddCallParticipants(ctx context.Context, arg AddCallParticipantsParams) error {
-	_, err := q.db.Exec(ctx, addCallParticipants, arg.CallID, arg.Column2)
+	_, err := q.db.Exec(ctx, addCallParticipants, arg.CallID, arg.SubscriberIDs)
 	return err
 }
 
@@ -36,13 +36,13 @@ where call_id = $2
 `
 
 type CloseCallParticipationsParams struct {
-	LeftAt  pgtype.Timestamptz
-	CallID  int64
-	Column3 []int64
+	LeftAt           pgtype.Timestamptz
+	CallID           int64
+	ParticipationIDs []int64
 }
 
 func (q *Queries) CloseCallParticipations(ctx context.Context, arg CloseCallParticipationsParams) error {
-	_, err := q.db.Exec(ctx, closeCallParticipations, arg.LeftAt, arg.CallID, arg.Column3)
+	_, err := q.db.Exec(ctx, closeCallParticipations, arg.LeftAt, arg.CallID, arg.ParticipationIDs)
 	return err
 }
 
@@ -71,9 +71,9 @@ order by c.id, a.id, p.id
 `
 
 type GetCallsParams struct {
-	Column1 int64
-	Column2 string
-	Column3 int64
+	CallID       int64
+	Status       string
+	SubscriberID int64
 }
 
 type GetCallsRow struct {
@@ -95,7 +95,7 @@ type GetCallsRow struct {
 }
 
 func (q *Queries) GetCalls(ctx context.Context, arg GetCallsParams) ([]GetCallsRow, error) {
-	rows, err := q.db.Query(ctx, getCalls, arg.Column1, arg.Column2, arg.Column3)
+	rows, err := q.db.Query(ctx, getCalls, arg.CallID, arg.Status, arg.SubscriberID)
 	if err != nil {
 		return nil, err
 	}
@@ -157,13 +157,13 @@ select $1, unnest($2::bigint[]), $3
 `
 
 type StartCallParticipationsParams struct {
-	CallID   int64
-	Column2  []int64
-	JoinedAt pgtype.Timestamptz
+	CallID        int64
+	SubscriberIDs []int64
+	JoinedAt      pgtype.Timestamptz
 }
 
 func (q *Queries) StartCallParticipations(ctx context.Context, arg StartCallParticipationsParams) error {
-	_, err := q.db.Exec(ctx, startCallParticipations, arg.CallID, arg.Column2, arg.JoinedAt)
+	_, err := q.db.Exec(ctx, startCallParticipations, arg.CallID, arg.SubscriberIDs, arg.JoinedAt)
 	return err
 }
 
@@ -181,7 +181,7 @@ type UpdateCallParams struct {
 	Status     string
 	Duration   pgtype.Interval
 	FinishedAt pgtype.Timestamptz
-	ID         int64
+	CallID     int64
 	Version    int64
 }
 
@@ -190,7 +190,7 @@ func (q *Queries) UpdateCall(ctx context.Context, arg UpdateCallParams) (int64, 
 		arg.Status,
 		arg.Duration,
 		arg.FinishedAt,
-		arg.ID,
+		arg.CallID,
 		arg.Version,
 	)
 	var id int64

@@ -12,13 +12,13 @@ left join call_participants cp on cp.call_id = c.id
 left join abonents a on a.id = cp.subscriber_id
 left join call_participations p
     on p.call_id = cp.call_id and p.subscriber_id = cp.subscriber_id
-where (c.id = $1::bigint or $1::bigint = 0)
-  and (c.status = $2::text or $2::text = '')
+where (c.id = @call_id::bigint or @call_id::bigint = 0)
+  and (c.status = @status::text or @status::text = '')
   and (exists (
       select 1 from call_participants participant
       where participant.call_id = c.id
-        and participant.subscriber_id = $3::bigint
-  ) or $3::bigint = 0)
+        and participant.subscriber_id = @subscriber_id::bigint
+  ) or @subscriber_id::bigint = 0)
 order by c.id, a.id, p.id;
 
 -- name: StartCall :one
@@ -28,25 +28,25 @@ returning *;
 
 -- name: AddCallParticipants :exec
 insert into call_participants (call_id, subscriber_id)
-select $1, unnest($2::bigint[])
+select @call_id, unnest(@subscriber_ids::bigint[])
 on conflict (call_id, subscriber_id) do nothing;
 
 -- name: StartCallParticipations :exec
 insert into call_participations (call_id, subscriber_id, joined_at)
-select $1, unnest($2::bigint[]), $3;
+select @call_id, unnest(@subscriber_ids::bigint[]), @joined_at;
 
 -- name: UpdateCall :one
 update calls
-set status = $1,
-    duration = $2,
-    finished_at = $3,
+set status = @status,
+    duration = @duration,
+    finished_at = @finished_at,
     version = version + 1
-where id = $4 and version = $5
+where id = @call_id and version = @version
 returning id;
 
 -- name: CloseCallParticipations :exec
 update call_participations
-set left_at = $1
-where call_id = $2
-  and id = any($3::bigint[])
+set left_at = @left_at
+where call_id = @call_id
+  and id = any(@participation_ids::bigint[])
   and left_at is null;

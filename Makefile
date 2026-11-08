@@ -23,8 +23,11 @@ generate: ogen_gen sqlc_gen
 
 migrate:
 	@set -eu; set -a; . ./configs/.env; set +a; \
+	PGUSER="$${POSTGRES_USER}" \
+	PGPASSWORD="$${POSTGRES_PASSWORD}" \
+	PGDATABASE="$${POSTGRES_DB}" \
 	GOOSE_DRIVER=postgres \
-	GOOSE_DBSTRING="postgres://$${POSTGRES_USER}:$${POSTGRES_PASSWORD}@localhost:$(POSTGRES_PORT)/$${POSTGRES_DB}?sslmode=disable" \
+	GOOSE_DBSTRING="host=localhost port=$(POSTGRES_PORT) sslmode=disable" \
 	go run github.com/pressly/goose/v3/cmd/goose@v3.29.0 -dir migrations up
 
 test:
@@ -34,7 +37,7 @@ build: generate
 	go build ./...
 
 run:
-	go run ./...
+	go run ./cmd
 
 vet:
 	go vet ./...

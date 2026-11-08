@@ -8,6 +8,7 @@ import (
 
 	"github.com/ogen-go/ogen/middleware"
 	"github.com/ogen-go/ogen/ogenerrors"
+	"github.com/ogen-go/ogen/ogenregex"
 	"github.com/ogen-go/ogen/otelogen"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -15,6 +16,9 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+var regexMap = map[string]ogenregex.Regexp{
+	"^[^\\x00]*$": ogenregex.MustCompile("^[^\\x00]*$"),
+}
 var (
 	// Allocate option closure once.
 	serverSpanKind = trace.WithSpanKind(trace.SpanKindServer)

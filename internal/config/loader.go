@@ -3,7 +3,6 @@ package config
 import (
 	"errors"
 	"fmt"
-	"log/slog"
 	"os"
 	"strings"
 
@@ -19,20 +18,7 @@ const (
 	configPath = "configs/config.yaml"
 )
 
-func MustLoad() Config {
-	config, err := load()
-	if err != nil {
-		slog.Default().With(slog.String("operation", "config.MustLoad")).Error(
-			"не удалось загрузить конфигурацию",
-			slog.String("error", err.Error()),
-		)
-		os.Exit(1)
-	}
-
-	return config
-}
-
-func load() (Config, error) {
+func Load() (Config, error) {
 	loader := koanf.New(".")
 	if err := loader.Load(file.Provider(configPath), yaml.Parser()); err != nil {
 		return Config{}, fmt.Errorf("не удалось прочитать YAML-конфигурацию: %w", err)

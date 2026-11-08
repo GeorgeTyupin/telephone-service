@@ -13,7 +13,7 @@ import (
 )
 
 func (r *Repository) GetCalls(ctx context.Context, filter model.CallsFilter) ([]model.Call, error) {
-	return getCalls(ctx, r.queries, record.GetCallsParams{Column2: string(filter.Status)})
+	return getCalls(ctx, r.queries, record.GetCallsParams{Status: string(filter.Status)})
 }
 
 func (r *Repository) GetCall(ctx context.Context, id int) (model.Call, error) {
@@ -21,7 +21,7 @@ func (r *Repository) GetCall(ctx context.Context, id int) (model.Call, error) {
 }
 
 func (r *Repository) GetSubscriberCalls(ctx context.Context, id int) ([]model.Call, error) {
-	return getCalls(ctx, r.queries, record.GetCallsParams{Column3: int64(id)})
+	return getCalls(ctx, r.queries, record.GetCallsParams{SubscriberID: int64(id)})
 }
 
 func (r *Repository) StartCall(ctx context.Context, call model.Call) (model.Call, error) {
@@ -34,7 +34,7 @@ func (r *Repository) StartCall(ctx context.Context, call model.Call) (model.Call
 			return fmt.Errorf("не удалось создать абонентов: %w", err)
 		}
 
-		storedSubscribers, err := q.GetSubscribersByPhoneNumbers(ctx, params.Column2)
+		storedSubscribers, err := q.GetSubscribersByPhoneNumbers(ctx, params.PhoneNumbers)
 		if err != nil {
 			return fmt.Errorf("не удалось получить участников звонка: %w", err)
 		}
@@ -53,13 +53,13 @@ func (r *Repository) StartCall(ctx context.Context, call model.Call) (model.Call
 		}
 
 		if err := q.AddCallParticipants(ctx, record.AddCallParticipantsParams{
-			CallID: storedCall.ID, Column2: participantIDs,
+			CallID: storedCall.ID, SubscriberIDs: participantIDs,
 		}); err != nil {
 			return fmt.Errorf("не удалось сохранить участников звонка: %w", err)
 		}
 
 		if err := q.StartCallParticipations(ctx, record.StartCallParticipationsParams{
-			CallID: storedCall.ID, Column2: participantIDs, JoinedAt: storedCall.StartedAt,
+			CallID: storedCall.ID, SubscriberIDs: participantIDs, JoinedAt: storedCall.StartedAt,
 		}); err != nil {
 			return fmt.Errorf("не удалось сохранить подключения участников: %w", err)
 		}
@@ -94,13 +94,13 @@ func (r *Repository) UpdateCall(ctx context.Context, update model.CallUpdate) (m
 		if update.ConnectedParticipant != nil {
 			participantIDs := []int64{int64(update.ConnectedParticipant.Id)}
 			if err := q.AddCallParticipants(ctx, record.AddCallParticipantsParams{
-				CallID: int64(update.Call.Id), Column2: participantIDs,
+				CallID: int64(update.Call.Id), SubscriberIDs: participantIDs,
 			}); err != nil {
 				return fmt.Errorf("не удалось сохранить участника: %w", err)
 			}
 
 			if err := q.StartCallParticipations(ctx, record.StartCallParticipationsParams{
-				CallID: int64(update.Call.Id), Column2: participantIDs,
+				CallID: int64(update.Call.Id), SubscriberIDs: participantIDs,
 				JoinedAt: adapter.CallTimeToRecord(update.ChangedAt),
 			}); err != nil {
 				return fmt.Errorf("не удалось сохранить подключение участника: %w", err)
@@ -114,7 +114,7 @@ func (r *Repository) UpdateCall(ctx context.Context, update model.CallUpdate) (m
 			}
 
 			if err := q.CloseCallParticipations(ctx, record.CloseCallParticipationsParams{
-				CallID: int64(update.Call.Id), Column3: participationIDs,
+				CallID: int64(update.Call.Id), ParticipationIDs: participationIDs,
 				LeftAt: adapter.CallTimeToRecord(update.ChangedAt),
 			}); err != nil {
 				return fmt.Errorf("не удалось сохранить отключение участников: %w", err)
@@ -157,7 +157,7 @@ func getCalls(ctx context.Context, q *record.Queries, params record.GetCallsPara
 }
 
 func getCall(ctx context.Context, q *record.Queries, id int) (model.Call, error) {
-	calls, err := getCalls(ctx, q, record.GetCallsParams{Column1: int64(id)})
+	calls, err := getCalls(ctx, q, record.GetCallsParams{CallID: int64(id)})
 	if err != nil {
 		return model.Call{}, err
 	}

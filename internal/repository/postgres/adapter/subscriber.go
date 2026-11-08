@@ -8,12 +8,12 @@ import (
 
 func SubscribersToRecord(subscribers []model.Subscriber) record.CreateSubscribersParams {
 	params := record.CreateSubscribersParams{
-		Column1: make([]string, len(subscribers)),
-		Column2: make([]string, len(subscribers)),
+		Names:        make([]string, len(subscribers)),
+		PhoneNumbers: make([]string, len(subscribers)),
 	}
 	for i, subscriber := range subscribers {
-		params.Column1[i] = subscriber.Name
-		params.Column2[i] = model.PhoneNumberToString(subscriber.PhoneNumber)
+		params.Names[i] = subscriber.Name
+		params.PhoneNumbers[i] = model.PhoneNumberToString(subscriber.PhoneNumber)
 	}
 
 	return params

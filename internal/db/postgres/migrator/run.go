@@ -8,15 +8,22 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
+	"github.com/pressly/goose/v3/lock"
 )
 
 const migrationsPath = "migrations"
 
 func Run(ctx context.Context, pool *pgxpool.Pool) error {
+	locker, err := lock.NewPostgresSessionLocker()
+	if err != nil {
+		return fmt.Errorf("не удалось создать блокировку миграций: %w", err)
+	}
+
 	provider, err := goose.NewProvider(
 		goose.DialectPostgres,
 		stdlib.OpenDBFromPool(pool),
 		os.DirFS(migrationsPath),
+		goose.WithSessionLocker(locker),
 	)
 	if err != nil {
 		return fmt.Errorf("не получилось инициализировать провайдер: %w", err)

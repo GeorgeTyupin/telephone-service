@@ -23,12 +23,12 @@ on conflict ((ltrim(regexp_replace(phone_number, '[^0-9]', '', 'g'), '0'))) do n
 `
 
 type CreateSubscribersParams struct {
-	Column1 []string
-	Column2 []string
+	Names        []string
+	PhoneNumbers []string
 }
 
 func (q *Queries) CreateSubscribers(ctx context.Context, arg CreateSubscribersParams) error {
-	_, err := q.db.Exec(ctx, createSubscribers, arg.Column1, arg.Column2)
+	_, err := q.db.Exec(ctx, createSubscribers, arg.Names, arg.PhoneNumbers)
 	return err
 }
 
@@ -106,8 +106,8 @@ order by a.id
 for key share of a
 `
 
-func (q *Queries) GetSubscribersByPhoneNumbers(ctx context.Context, dollar_1 []string) ([]Abonent, error) {
-	rows, err := q.db.Query(ctx, getSubscribersByPhoneNumbers, dollar_1)
+func (q *Queries) GetSubscribersByPhoneNumbers(ctx context.Context, phoneNumbers []string) ([]Abonent, error) {
+	rows, err := q.db.Query(ctx, getSubscribersByPhoneNumbers, phoneNumbers)
 	if err != nil {
 		return nil, err
 	}

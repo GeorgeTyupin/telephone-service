@@ -289,6 +289,7 @@ components:
         name:
           type: string
           minLength: 1
+          pattern: '^[^\x00]*$'
         phone_number:
           type: string
           minLength: 1
