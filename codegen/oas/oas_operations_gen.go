@@ -6,7 +6,14 @@ package api
 type OperationName = string
 
 const (
-	CreateCallOperation     OperationName = "CreateCall"
-	GetCallsOperation       OperationName = "GetCalls"
-	GetSubscribersOperation OperationName = "GetSubscribers"
+	ConnectCallOperation        OperationName = "ConnectCall"
+	DisconnectCallOperation     OperationName = "DisconnectCall"
+	FinishCallOperation         OperationName = "FinishCall"
+	GetCallOperation            OperationName = "GetCall"
+	GetCallsOperation           OperationName = "GetCalls"
+	GetSubscriberOperation      OperationName = "GetSubscriber"
+	GetSubscriberCallsOperation OperationName = "GetSubscriberCalls"
+	GetSubscriberStatsOperation OperationName = "GetSubscriberStats"
+	GetSubscribersOperation     OperationName = "GetSubscribers"
+	StartCallOperation          OperationName = "StartCall"
 )

@@ -34,13 +34,137 @@ func (s *Call) Validate() error {
 			Error: err,
 		})
 	}
+	if err := func() error {
+		if err := s.Status.Validate(); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "status",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		if s.Participations == nil {
+			return errors.New("nil is invalid value")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "participations",
+			Error: err,
+		})
+	}
 	if len(failures) > 0 {
 		return &validate.Error{Fields: failures}
 	}
 	return nil
 }
 
-func (s *CreateCallParticipant) Validate() error {
+func (s *CallParticipantRequest) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
+	var failures []validate.FieldError
+	if err := func() error {
+		if err := (validate.Int{
+			MinSet:        true,
+			Min:           1,
+			MaxSet:        false,
+			Max:           0,
+			MinExclusive:  false,
+			MaxExclusive:  false,
+			MultipleOfSet: false,
+			MultipleOf:    0,
+			Pattern:       nil,
+		}).Validate(int64(s.SubscriberID)); err != nil {
+			return errors.Wrap(err, "int")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "subscriber_id",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
+func (s CallStatus) Validate() error {
+	switch s {
+	case "active":
+		return nil
+	case "finished":
+		return nil
+	default:
+		return errors.Errorf("invalid value: %v", s)
+	}
+}
+
+func (s GetCallsOKApplicationJSON) Validate() error {
+	alias := ([]Call)(s)
+	if alias == nil {
+		return errors.New("nil is invalid value")
+	}
+	var failures []validate.FieldError
+	for i, elem := range alias {
+		if err := func() error {
+			if err := elem.Validate(); err != nil {
+				return err
+			}
+			return nil
+		}(); err != nil {
+			failures = append(failures, validate.FieldError{
+				Name:  fmt.Sprintf("[%d]", i),
+				Error: err,
+			})
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
+func (s GetSubscriberCallsOKApplicationJSON) Validate() error {
+	alias := ([]Call)(s)
+	if alias == nil {
+		return errors.New("nil is invalid value")
+	}
+	var failures []validate.FieldError
+	for i, elem := range alias {
+		if err := func() error {
+			if err := elem.Validate(); err != nil {
+				return err
+			}
+			return nil
+		}(); err != nil {
+			failures = append(failures, validate.FieldError{
+				Name:  fmt.Sprintf("[%d]", i),
+				Error: err,
+			})
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
+func (s GetSubscribersOKApplicationJSON) Validate() error {
+	alias := ([]Subscriber)(s)
+	if alias == nil {
+		return errors.New("nil is invalid value")
+	}
+	return nil
+}
+
+func (s *StartCallParticipant) Validate() error {
 	if s == nil {
 		return validate.ErrNilPointer
 	}
@@ -98,7 +222,7 @@ func (s *CreateCallParticipant) Validate() error {
 	return nil
 }
 
-func (s *CreateCallRequest) Validate() error {
+func (s *StartCallRequest) Validate() error {
 	if s == nil {
 		return validate.ErrNilPointer
 	}
@@ -116,7 +240,7 @@ func (s *CreateCallRequest) Validate() error {
 		}).ValidateLength(len(s.Participants)); err != nil {
 			return errors.Wrap(err, "array")
 		}
-		if err := validateUniqueCreateCallParticipant(s.Participants); err != nil {
+		if err := validateUniqueStartCallParticipant(s.Participants); err != nil {
 			return errors.Wrap(err, "array")
 		}
 		var failures []validate.FieldError
@@ -145,39 +269,6 @@ func (s *CreateCallRequest) Validate() error {
 	}
 	if len(failures) > 0 {
 		return &validate.Error{Fields: failures}
-	}
-	return nil
-}
-
-func (s GetCallsOKApplicationJSON) Validate() error {
-	alias := ([]Call)(s)
-	if alias == nil {
-		return errors.New("nil is invalid value")
-	}
-	var failures []validate.FieldError
-	for i, elem := range alias {
-		if err := func() error {
-			if err := elem.Validate(); err != nil {
-				return err
-			}
-			return nil
-		}(); err != nil {
-			failures = append(failures, validate.FieldError{
-				Name:  fmt.Sprintf("[%d]", i),
-				Error: err,
-			})
-		}
-	}
-	if len(failures) > 0 {
-		return &validate.Error{Fields: failures}
-	}
-	return nil
-}
-
-func (s GetSubscribersOKApplicationJSON) Validate() error {
-	alias := ([]Subscriber)(s)
-	if alias == nil {
-		return errors.New("nil is invalid value")
 	}
 	return nil
 }

@@ -5,12 +5,16 @@ info:
   description: |
     HTTP API телефонного сервиса для работы со звонками и абонентами.
 
-
 paths:
   /calls:
     get:
       operationId: getCalls
       summary: Получить список звонков
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/CallStatus'
       responses:
         '200':
           description: Список звонков
@@ -22,6 +26,98 @@ paths:
                   $ref: '#/components/schemas/Call'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /calls/{id}:
+    get:
+      operationId: getCall
+      summary: Получить звонок
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          $ref: '#/components/responses/Call'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /calls/start:
+    post:
+      operationId: startCall
+      summary: Начать звонок
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartCallRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/Call'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /calls/{id}/connect:
+    post:
+      operationId: connectCall
+      summary: Подключить участника к звонку
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      requestBody:
+        $ref: '#/components/requestBodies/CallParticipant'
+      responses:
+        '200':
+          $ref: '#/components/responses/Call'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /calls/{id}/disconnect:
+    post:
+      operationId: disconnectCall
+      summary: Отключить участника от звонка
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      requestBody:
+        $ref: '#/components/requestBodies/CallParticipant'
+      responses:
+        '200':
+          $ref: '#/components/responses/Call'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /calls/{id}/finish:
+    post:
+      operationId: finishCall
+      summary: Завершить звонок
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          $ref: '#/components/responses/Call'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/InternalError'
 
@@ -44,30 +140,86 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /call:
-    post:
-      operationId: createCall
-      summary: Создать звонок
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateCallRequest'
+  /abonets/{id}:
+    get:
+      operationId: getSubscriber
+      summary: Получить абонента
+      parameters:
+        - $ref: '#/components/parameters/Id'
       responses:
-        '201':
-          description: Созданный звонок
+        '200':
+          description: Абонент
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Call'
+                $ref: '#/components/schemas/Subscriber'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
 
+  /abonets/{id}/calls:
+    get:
+      operationId: getSubscriberCalls
+      summary: Получить звонки абонента
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: Звонки абонента
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Call'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /abonets/{id}/stats:
+    get:
+      operationId: getSubscriberStats
+      summary: Получить статистику завершённых звонков абонента
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: Статистика абонента
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriberStats'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
 
 components:
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+
+  requestBodies:
+    CallParticipant:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CallParticipantRequest'
+
   schemas:
     Subscriber:
       type: object
@@ -80,9 +232,13 @@ components:
         phone_number:
           type: string
 
+    CallStatus:
+      type: string
+      enum: [active, finished]
+
     Call:
       type: object
-      required: [id, participants, duration, created_at]
+      required: [id, participants, duration, created_at, status, participations]
       properties:
         id:
           type: integer
@@ -96,11 +252,38 @@ components:
           description: Продолжительность в формате Go, например 1m30s.
         created_at:
           type: string
-          description: >-
-            Прежнее текстовое представление времени без ограничения RFC 3339.
+          description: Прежнее текстовое представление времени.
+        status:
+          $ref: '#/components/schemas/CallStatus'
+        started_at:
+          type: string
+          format: date-time
+        finished_at:
+          type: string
+          format: date-time
+        participations:
+          type: array
+          items:
+            $ref: '#/components/schemas/CallParticipation'
 
-    CreateCallParticipant:
+    CallParticipation:
       type: object
+      required: [id, subscriber_id, joined_at]
+      properties:
+        id:
+          type: integer
+        subscriber_id:
+          type: integer
+        joined_at:
+          type: string
+          format: date-time
+        left_at:
+          type: string
+          format: date-time
+
+    StartCallParticipant:
+      type: object
+      additionalProperties: false
       required: [name, phone_number]
       properties:
         name:
@@ -110,25 +293,41 @@ components:
           type: string
           minLength: 1
 
-    CreateCallRequest:
+    StartCallRequest:
       type: object
-      required: [participants, duration, created_at]
+      additionalProperties: false
+      required: [participants]
       properties:
         participants:
           type: array
           minItems: 1
           uniqueItems: true
           description: >-
-            Абоненты определяются по нормализованному телефону и не должны повторяться.
+            Абоненты определяются по нормализованному телефону.
+            Повторы запрещены.
             Отсутствующие создаются, данные существующих не изменяются.
           items:
-            $ref: '#/components/schemas/CreateCallParticipant'
-        duration:
+            $ref: '#/components/schemas/StartCallParticipant'
+
+    CallParticipantRequest:
+      type: object
+      additionalProperties: false
+      required: [subscriber_id]
+      properties:
+        subscriber_id:
+          type: integer
+          minimum: 1
+
+    SubscriberStats:
+      type: object
+      required: [calls_count, total_duration, average_duration]
+      properties:
+        calls_count:
+          type: integer
+        total_duration:
           type: string
-          description: Продолжительность в формате Go, например 1m30s.
-        created_at:
+        average_duration:
           type: string
-          description: Дата и время в формате, принимаемом доменным парсером.
 
     Error:
       type: object
@@ -137,14 +336,32 @@ components:
       properties:
         error_message:
           type: string
+
   responses:
+    Call:
+      description: Звонок
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Call'
     BadRequest:
       description: Некорректный запрос
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
-
+    NotFound:
+      description: Звонок или абонент не найден
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Conflict:
+      description: Конфликт состояния звонка или участника
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
     InternalError:
       description: Внутренняя ошибка сервера
       content:

@@ -2,15 +2,24 @@
 
 package api
 
+import (
+	"time"
+
+	"github.com/go-faster/errors"
+)
+
 // Ref: #/components/schemas/Call
 type Call struct {
 	ID           int          `json:"id"`
 	Participants []Subscriber `json:"participants"`
 	// Продолжительность в формате Go, например 1m30s.
 	Duration string `json:"duration"`
-	// Прежнее текстовое представление времени без
-	// ограничения RFC 3339.
-	CreatedAt string `json:"created_at"`
+	// Прежнее текстовое представление времени.
+	CreatedAt      string              `json:"created_at"`
+	Status         CallStatus          `json:"status"`
+	StartedAt      OptDateTime         `json:"started_at"`
+	FinishedAt     OptDateTime         `json:"finished_at"`
+	Participations []CallParticipation `json:"participations"`
 }
 
 // GetID returns the value of ID.
@@ -33,6 +42,26 @@ func (s *Call) GetCreatedAt() string {
 	return s.CreatedAt
 }
 
+// GetStatus returns the value of Status.
+func (s *Call) GetStatus() CallStatus {
+	return s.Status
+}
+
+// GetStartedAt returns the value of StartedAt.
+func (s *Call) GetStartedAt() OptDateTime {
+	return s.StartedAt
+}
+
+// GetFinishedAt returns the value of FinishedAt.
+func (s *Call) GetFinishedAt() OptDateTime {
+	return s.FinishedAt
+}
+
+// GetParticipations returns the value of Participations.
+func (s *Call) GetParticipations() []CallParticipation {
+	return s.Participations
+}
+
 // SetID sets the value of ID.
 func (s *Call) SetID(val int) {
 	s.ID = val
@@ -53,83 +82,168 @@ func (s *Call) SetCreatedAt(val string) {
 	s.CreatedAt = val
 }
 
-func (*Call) createCallRes() {}
-
-type CreateCallBadRequest Error
-
-func (*CreateCallBadRequest) createCallRes() {}
-
-type CreateCallInternalServerError Error
-
-func (*CreateCallInternalServerError) createCallRes() {}
-
-// Ref: #/components/schemas/CreateCallParticipant
-type CreateCallParticipant struct {
-	Name        string `json:"name"`
-	PhoneNumber string `json:"phone_number"`
+// SetStatus sets the value of Status.
+func (s *Call) SetStatus(val CallStatus) {
+	s.Status = val
 }
 
-// GetName returns the value of Name.
-func (s *CreateCallParticipant) GetName() string {
-	return s.Name
+// SetStartedAt sets the value of StartedAt.
+func (s *Call) SetStartedAt(val OptDateTime) {
+	s.StartedAt = val
 }
 
-// GetPhoneNumber returns the value of PhoneNumber.
-func (s *CreateCallParticipant) GetPhoneNumber() string {
-	return s.PhoneNumber
+// SetFinishedAt sets the value of FinishedAt.
+func (s *Call) SetFinishedAt(val OptDateTime) {
+	s.FinishedAt = val
 }
 
-// SetName sets the value of Name.
-func (s *CreateCallParticipant) SetName(val string) {
-	s.Name = val
+// SetParticipations sets the value of Participations.
+func (s *Call) SetParticipations(val []CallParticipation) {
+	s.Participations = val
 }
 
-// SetPhoneNumber sets the value of PhoneNumber.
-func (s *CreateCallParticipant) SetPhoneNumber(val string) {
-	s.PhoneNumber = val
+func (*Call) connectCallRes()    {}
+func (*Call) disconnectCallRes() {}
+func (*Call) finishCallRes()     {}
+func (*Call) getCallRes()        {}
+func (*Call) startCallRes()      {}
+
+// Ref: #/components/schemas/CallParticipantRequest
+type CallParticipantRequest struct {
+	SubscriberID int `json:"subscriber_id"`
 }
 
-// Ref: #/components/schemas/CreateCallRequest
-type CreateCallRequest struct {
-	// Абоненты определяются по нормализованному телефону и
-	// не должны повторяться. Отсутствующие создаются,
-	// данные существующих не изменяются.
-	Participants []CreateCallParticipant `json:"participants"`
-	// Продолжительность в формате Go, например 1m30s.
-	Duration string `json:"duration"`
-	// Дата и время в формате, принимаемом доменным парсером.
-	CreatedAt string `json:"created_at"`
+// GetSubscriberID returns the value of SubscriberID.
+func (s *CallParticipantRequest) GetSubscriberID() int {
+	return s.SubscriberID
 }
 
-// GetParticipants returns the value of Participants.
-func (s *CreateCallRequest) GetParticipants() []CreateCallParticipant {
-	return s.Participants
+// SetSubscriberID sets the value of SubscriberID.
+func (s *CallParticipantRequest) SetSubscriberID(val int) {
+	s.SubscriberID = val
 }
 
-// GetDuration returns the value of Duration.
-func (s *CreateCallRequest) GetDuration() string {
-	return s.Duration
+// Ref: #/components/schemas/CallParticipation
+type CallParticipation struct {
+	ID           int         `json:"id"`
+	SubscriberID int         `json:"subscriber_id"`
+	JoinedAt     time.Time   `json:"joined_at"`
+	LeftAt       OptDateTime `json:"left_at"`
 }
 
-// GetCreatedAt returns the value of CreatedAt.
-func (s *CreateCallRequest) GetCreatedAt() string {
-	return s.CreatedAt
+// GetID returns the value of ID.
+func (s *CallParticipation) GetID() int {
+	return s.ID
 }
 
-// SetParticipants sets the value of Participants.
-func (s *CreateCallRequest) SetParticipants(val []CreateCallParticipant) {
-	s.Participants = val
+// GetSubscriberID returns the value of SubscriberID.
+func (s *CallParticipation) GetSubscriberID() int {
+	return s.SubscriberID
 }
 
-// SetDuration sets the value of Duration.
-func (s *CreateCallRequest) SetDuration(val string) {
-	s.Duration = val
+// GetJoinedAt returns the value of JoinedAt.
+func (s *CallParticipation) GetJoinedAt() time.Time {
+	return s.JoinedAt
 }
 
-// SetCreatedAt sets the value of CreatedAt.
-func (s *CreateCallRequest) SetCreatedAt(val string) {
-	s.CreatedAt = val
+// GetLeftAt returns the value of LeftAt.
+func (s *CallParticipation) GetLeftAt() OptDateTime {
+	return s.LeftAt
 }
+
+// SetID sets the value of ID.
+func (s *CallParticipation) SetID(val int) {
+	s.ID = val
+}
+
+// SetSubscriberID sets the value of SubscriberID.
+func (s *CallParticipation) SetSubscriberID(val int) {
+	s.SubscriberID = val
+}
+
+// SetJoinedAt sets the value of JoinedAt.
+func (s *CallParticipation) SetJoinedAt(val time.Time) {
+	s.JoinedAt = val
+}
+
+// SetLeftAt sets the value of LeftAt.
+func (s *CallParticipation) SetLeftAt(val OptDateTime) {
+	s.LeftAt = val
+}
+
+// Ref: #/components/schemas/CallStatus
+type CallStatus string
+
+const (
+	CallStatusActive   CallStatus = "active"
+	CallStatusFinished CallStatus = "finished"
+)
+
+// AllValues returns all CallStatus values.
+func (CallStatus) AllValues() []CallStatus {
+	return []CallStatus{
+		CallStatusActive,
+		CallStatusFinished,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s CallStatus) MarshalText() ([]byte, error) {
+	switch s {
+	case CallStatusActive:
+		return []byte(s), nil
+	case CallStatusFinished:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *CallStatus) UnmarshalText(data []byte) error {
+	switch CallStatus(data) {
+	case CallStatusActive:
+		*s = CallStatusActive
+		return nil
+	case CallStatusFinished:
+		*s = CallStatusFinished
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type ConnectCallBadRequest Error
+
+func (*ConnectCallBadRequest) connectCallRes() {}
+
+type ConnectCallConflict Error
+
+func (*ConnectCallConflict) connectCallRes() {}
+
+type ConnectCallInternalServerError Error
+
+func (*ConnectCallInternalServerError) connectCallRes() {}
+
+type ConnectCallNotFound Error
+
+func (*ConnectCallNotFound) connectCallRes() {}
+
+type DisconnectCallBadRequest Error
+
+func (*DisconnectCallBadRequest) disconnectCallRes() {}
+
+type DisconnectCallConflict Error
+
+func (*DisconnectCallConflict) disconnectCallRes() {}
+
+type DisconnectCallInternalServerError Error
+
+func (*DisconnectCallInternalServerError) disconnectCallRes() {}
+
+type DisconnectCallNotFound Error
+
+func (*DisconnectCallNotFound) disconnectCallRes() {}
 
 // Штатный формат ошибки HTTP-сервера ogen.
 // Ref: #/components/schemas/Error
@@ -147,6 +261,34 @@ func (s *Error) SetErrorMessage(val string) {
 	s.ErrorMessage = val
 }
 
+type FinishCallBadRequest Error
+
+func (*FinishCallBadRequest) finishCallRes() {}
+
+type FinishCallConflict Error
+
+func (*FinishCallConflict) finishCallRes() {}
+
+type FinishCallInternalServerError Error
+
+func (*FinishCallInternalServerError) finishCallRes() {}
+
+type FinishCallNotFound Error
+
+func (*FinishCallNotFound) finishCallRes() {}
+
+type GetCallBadRequest Error
+
+func (*GetCallBadRequest) getCallRes() {}
+
+type GetCallInternalServerError Error
+
+func (*GetCallInternalServerError) getCallRes() {}
+
+type GetCallNotFound Error
+
+func (*GetCallNotFound) getCallRes() {}
+
 type GetCallsBadRequest Error
 
 func (*GetCallsBadRequest) getCallsRes() {}
@@ -159,6 +301,46 @@ type GetCallsOKApplicationJSON []Call
 
 func (*GetCallsOKApplicationJSON) getCallsRes() {}
 
+type GetSubscriberBadRequest Error
+
+func (*GetSubscriberBadRequest) getSubscriberRes() {}
+
+type GetSubscriberCallsBadRequest Error
+
+func (*GetSubscriberCallsBadRequest) getSubscriberCallsRes() {}
+
+type GetSubscriberCallsInternalServerError Error
+
+func (*GetSubscriberCallsInternalServerError) getSubscriberCallsRes() {}
+
+type GetSubscriberCallsNotFound Error
+
+func (*GetSubscriberCallsNotFound) getSubscriberCallsRes() {}
+
+type GetSubscriberCallsOKApplicationJSON []Call
+
+func (*GetSubscriberCallsOKApplicationJSON) getSubscriberCallsRes() {}
+
+type GetSubscriberInternalServerError Error
+
+func (*GetSubscriberInternalServerError) getSubscriberRes() {}
+
+type GetSubscriberNotFound Error
+
+func (*GetSubscriberNotFound) getSubscriberRes() {}
+
+type GetSubscriberStatsBadRequest Error
+
+func (*GetSubscriberStatsBadRequest) getSubscriberStatsRes() {}
+
+type GetSubscriberStatsInternalServerError Error
+
+func (*GetSubscriberStatsInternalServerError) getSubscriberStatsRes() {}
+
+type GetSubscriberStatsNotFound Error
+
+func (*GetSubscriberStatsNotFound) getSubscriberStatsRes() {}
+
 type GetSubscribersBadRequest Error
 
 func (*GetSubscribersBadRequest) getSubscribersRes() {}
@@ -170,6 +352,150 @@ func (*GetSubscribersInternalServerError) getSubscribersRes() {}
 type GetSubscribersOKApplicationJSON []Subscriber
 
 func (*GetSubscribersOKApplicationJSON) getSubscribersRes() {}
+
+// NewOptCallStatus returns new OptCallStatus with value set to v.
+func NewOptCallStatus(v CallStatus) OptCallStatus {
+	return OptCallStatus{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptCallStatus is optional CallStatus.
+type OptCallStatus struct {
+	Value CallStatus
+	Set   bool
+}
+
+// IsSet returns true if OptCallStatus was set.
+func (o OptCallStatus) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptCallStatus) Reset() {
+	var v CallStatus
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptCallStatus) SetTo(v CallStatus) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptCallStatus) Get() (v CallStatus, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptCallStatus) Or(d CallStatus) CallStatus {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptDateTime returns new OptDateTime with value set to v.
+func NewOptDateTime(v time.Time) OptDateTime {
+	return OptDateTime{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptDateTime is optional time.Time.
+type OptDateTime struct {
+	Value time.Time
+	Set   bool
+}
+
+// IsSet returns true if OptDateTime was set.
+func (o OptDateTime) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptDateTime) Reset() {
+	var v time.Time
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptDateTime) SetTo(v time.Time) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptDateTime) Get() (v time.Time, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptDateTime) Or(d time.Time) time.Time {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+type StartCallBadRequest Error
+
+func (*StartCallBadRequest) startCallRes() {}
+
+type StartCallInternalServerError Error
+
+func (*StartCallInternalServerError) startCallRes() {}
+
+// Ref: #/components/schemas/StartCallParticipant
+type StartCallParticipant struct {
+	Name        string `json:"name"`
+	PhoneNumber string `json:"phone_number"`
+}
+
+// GetName returns the value of Name.
+func (s *StartCallParticipant) GetName() string {
+	return s.Name
+}
+
+// GetPhoneNumber returns the value of PhoneNumber.
+func (s *StartCallParticipant) GetPhoneNumber() string {
+	return s.PhoneNumber
+}
+
+// SetName sets the value of Name.
+func (s *StartCallParticipant) SetName(val string) {
+	s.Name = val
+}
+
+// SetPhoneNumber sets the value of PhoneNumber.
+func (s *StartCallParticipant) SetPhoneNumber(val string) {
+	s.PhoneNumber = val
+}
+
+// Ref: #/components/schemas/StartCallRequest
+type StartCallRequest struct {
+	// Абоненты определяются по нормализованному телефону.
+	// Повторы запрещены. Отсутствующие создаются, данные
+	// существующих не изменяются.
+	Participants []StartCallParticipant `json:"participants"`
+}
+
+// GetParticipants returns the value of Participants.
+func (s *StartCallRequest) GetParticipants() []StartCallParticipant {
+	return s.Participants
+}
+
+// SetParticipants sets the value of Participants.
+func (s *StartCallRequest) SetParticipants(val []StartCallParticipant) {
+	s.Participants = val
+}
 
 // Ref: #/components/schemas/Subscriber
 type Subscriber struct {
@@ -207,3 +533,44 @@ func (s *Subscriber) SetName(val string) {
 func (s *Subscriber) SetPhoneNumber(val string) {
 	s.PhoneNumber = val
 }
+
+func (*Subscriber) getSubscriberRes() {}
+
+// Ref: #/components/schemas/SubscriberStats
+type SubscriberStats struct {
+	CallsCount      int    `json:"calls_count"`
+	TotalDuration   string `json:"total_duration"`
+	AverageDuration string `json:"average_duration"`
+}
+
+// GetCallsCount returns the value of CallsCount.
+func (s *SubscriberStats) GetCallsCount() int {
+	return s.CallsCount
+}
+
+// GetTotalDuration returns the value of TotalDuration.
+func (s *SubscriberStats) GetTotalDuration() string {
+	return s.TotalDuration
+}
+
+// GetAverageDuration returns the value of AverageDuration.
+func (s *SubscriberStats) GetAverageDuration() string {
+	return s.AverageDuration
+}
+
+// SetCallsCount sets the value of CallsCount.
+func (s *SubscriberStats) SetCallsCount(val int) {
+	s.CallsCount = val
+}
+
+// SetTotalDuration sets the value of TotalDuration.
+func (s *SubscriberStats) SetTotalDuration(val string) {
+	s.TotalDuration = val
+}
+
+// SetAverageDuration sets the value of AverageDuration.
+func (s *SubscriberStats) SetAverageDuration(val string) {
+	s.AverageDuration = val
+}
+
+func (*SubscriberStats) getSubscriberStatsRes() {}

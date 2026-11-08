@@ -4,13 +4,13 @@ package api
 
 import "github.com/ogen-go/ogen/validate"
 
-// Equal compares two CreateCallParticipant instances for equality.
+// Equal compares two StartCallParticipant instances for equality.
 // The depth parameter prevents infinite recursion on nested objects.
-func (a CreateCallParticipant) Equal(b CreateCallParticipant, depth int) bool {
+func (a StartCallParticipant) Equal(b StartCallParticipant, depth int) bool {
 	if depth > 10 {
 		panic(&validate.DepthLimitError{
 			MaxDepth: 10,
-			TypeName: "CreateCallParticipant",
+			TypeName: "StartCallParticipant",
 		})
 	}
 

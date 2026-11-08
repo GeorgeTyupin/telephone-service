@@ -8,24 +8,66 @@ import (
 
 // Handler handles operations described by OpenAPI v3 specification.
 type Handler interface {
-	// CreateCall implements createCall operation.
+	// ConnectCall implements connectCall operation.
 	//
-	// Создать звонок.
+	// Подключить участника к звонку.
 	//
-	// POST /call
-	CreateCall(ctx context.Context, req *CreateCallRequest) (CreateCallRes, error)
+	// POST /calls/{id}/connect
+	ConnectCall(ctx context.Context, req *CallParticipantRequest, params ConnectCallParams) (ConnectCallRes, error)
+	// DisconnectCall implements disconnectCall operation.
+	//
+	// Отключить участника от звонка.
+	//
+	// POST /calls/{id}/disconnect
+	DisconnectCall(ctx context.Context, req *CallParticipantRequest, params DisconnectCallParams) (DisconnectCallRes, error)
+	// FinishCall implements finishCall operation.
+	//
+	// Завершить звонок.
+	//
+	// POST /calls/{id}/finish
+	FinishCall(ctx context.Context, params FinishCallParams) (FinishCallRes, error)
+	// GetCall implements getCall operation.
+	//
+	// Получить звонок.
+	//
+	// GET /calls/{id}
+	GetCall(ctx context.Context, params GetCallParams) (GetCallRes, error)
 	// GetCalls implements getCalls operation.
 	//
 	// Получить список звонков.
 	//
 	// GET /calls
-	GetCalls(ctx context.Context) (GetCallsRes, error)
+	GetCalls(ctx context.Context, params GetCallsParams) (GetCallsRes, error)
+	// GetSubscriber implements getSubscriber operation.
+	//
+	// Получить абонента.
+	//
+	// GET /abonets/{id}
+	GetSubscriber(ctx context.Context, params GetSubscriberParams) (GetSubscriberRes, error)
+	// GetSubscriberCalls implements getSubscriberCalls operation.
+	//
+	// Получить звонки абонента.
+	//
+	// GET /abonets/{id}/calls
+	GetSubscriberCalls(ctx context.Context, params GetSubscriberCallsParams) (GetSubscriberCallsRes, error)
+	// GetSubscriberStats implements getSubscriberStats operation.
+	//
+	// Получить статистику завершённых звонков абонента.
+	//
+	// GET /abonets/{id}/stats
+	GetSubscriberStats(ctx context.Context, params GetSubscriberStatsParams) (GetSubscriberStatsRes, error)
 	// GetSubscribers implements getSubscribers operation.
 	//
 	// Прежний URL намеренно сохранён для совместимости.
 	//
 	// GET /abonets
 	GetSubscribers(ctx context.Context) (GetSubscribersRes, error)
+	// StartCall implements startCall operation.
+	//
+	// Начать звонок.
+	//
+	// POST /calls/start
+	StartCall(ctx context.Context, req *StartCallRequest) (StartCallRes, error)
 }
 
 // Server implements http server based on OpenAPI v3 specification and

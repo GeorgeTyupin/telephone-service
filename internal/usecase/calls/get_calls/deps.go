@@ -6,5 +6,5 @@ import (
 )
 
 type GetCallsService interface {
-	GetCalls(ctx context.Context) ([]model.Call, error)
+	GetCalls(ctx context.Context, filter model.CallsFilter) ([]model.Call, error)
 }

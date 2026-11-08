@@ -4,19 +4,10 @@ import (
 	"fmt"
 	"telephone-service/codegen/oas"
 	"telephone-service/internal/model"
+	"time"
 )
 
-func CallFromRequest(call api.CreateCallRequest) (model.Call, error) {
-	duration, err := model.StringToDuration(call.Duration)
-	if err != nil {
-		return model.Call{}, fmt.Errorf("не удалось преобразовать длительность звонка: %w", err)
-	}
-
-	createdAt, err := model.StringToTime(call.CreatedAt)
-	if err != nil {
-		return model.Call{}, fmt.Errorf("не удалось преобразовать время создания звонка: %w", err)
-	}
-
+func CallFromRequest(call api.StartCallRequest) (model.Call, error) {
 	participants := make([]model.Subscriber, len(call.Participants))
 	for i, participant := range call.Participants {
 		subscriber, err := SubscriberFromRequest(participant)
@@ -27,11 +18,7 @@ func CallFromRequest(call api.CreateCallRequest) (model.Call, error) {
 		participants[i] = subscriber
 	}
 
-	return model.Call{
-		Participants: participants,
-		Duration:     duration,
-		CreatedAt:    createdAt,
-	}, nil
+	return model.Call{Participants: participants}, nil
 }
 
 func CallToResponse(call model.Call) api.Call {
@@ -40,11 +27,25 @@ func CallToResponse(call model.Call) api.Call {
 		participants[i] = SubscriberToResponse(participant)
 	}
 
+	participations := make([]api.CallParticipation, len(call.Participations))
+	for i, participation := range call.Participations {
+		participations[i] = api.CallParticipation{
+			ID:           participation.Id,
+			SubscriberID: participation.SubscriberId,
+			JoinedAt:     time.Time(participation.JoinedAt),
+			LeftAt:       timeToResponse(participation.LeftAt),
+		}
+	}
+
 	return api.Call{
-		ID:           call.Id,
-		Participants: participants,
-		Duration:     call.Duration.DurationToString(),
-		CreatedAt:    call.CreatedAt.TimeToString(),
+		ID:             call.Id,
+		Participants:   participants,
+		Duration:       call.Duration.DurationToString(),
+		CreatedAt:      call.CreatedAt.TimeToString(),
+		Status:         api.CallStatus(call.Status),
+		StartedAt:      timeToResponse(call.StartedAt),
+		FinishedAt:     timeToResponse(call.FinishedAt),
+		Participations: participations,
 	}
 }
 
@@ -55,4 +56,16 @@ func CallsToResponse(calls []model.Call) []api.Call {
 	}
 
 	return response
+}
+
+func timeToResponse(value *model.Time) api.OptDateTime {
+	if value == nil {
+		return api.OptDateTime{}
+	}
+
+	return api.NewOptDateTime(time.Time(*value))
+}
+
+func CallsFilterFromParams(params api.GetCallsParams) model.CallsFilter {
+	return model.CallsFilter{Status: model.CallStatus(params.Status.Value)}
 }

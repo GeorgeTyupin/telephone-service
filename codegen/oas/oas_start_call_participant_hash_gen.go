@@ -7,9 +7,9 @@ import (
 	"hash/fnv"
 )
 
-// Hash computes a hash value for CreateCallParticipant using FNV-1a.
+// Hash computes a hash value for StartCallParticipant using FNV-1a.
 // Equal objects must produce equal hashes.
-func (a CreateCallParticipant) Hash() uint64 {
+func (a StartCallParticipant) Hash() uint64 {
 	h := fnv.New64a()
 
 	// Hash primitive field: Name

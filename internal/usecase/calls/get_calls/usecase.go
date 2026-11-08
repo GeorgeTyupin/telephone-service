@@ -13,6 +13,6 @@ func NewGetCallsUsecase(callsService GetCallsService) *GetCallsUsecase {
 	return &GetCallsUsecase{callsService: callsService}
 }
 
-func (uc *GetCallsUsecase) Execute(ctx context.Context) ([]model.Call, error) {
-	return uc.callsService.GetCalls(ctx)
+func (uc *GetCallsUsecase) Execute(ctx context.Context, filter model.CallsFilter) ([]model.Call, error) {
+	return uc.callsService.GetCalls(ctx, filter)
 }

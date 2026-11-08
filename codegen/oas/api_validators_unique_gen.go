@@ -6,8 +6,8 @@ import (
 	"github.com/ogen-go/ogen/validate"
 )
 
-// validateUniqueCreateCallParticipant checks for duplicate items using hash-based detection.
-func validateUniqueCreateCallParticipant(items []CreateCallParticipant) (err error) {
+// validateUniqueStartCallParticipant checks for duplicate items using hash-based detection.
+func validateUniqueStartCallParticipant(items []StartCallParticipant) (err error) {
 	if len(items) <= 1 {
 		return nil
 	}
@@ -23,7 +23,7 @@ func validateUniqueCreateCallParticipant(items []CreateCallParticipant) (err err
 	}()
 
 	type entry struct {
-		item  CreateCallParticipant
+		item  StartCallParticipant
 		index int
 	}
 	buckets := make(map[uint64][]entry, len(items))

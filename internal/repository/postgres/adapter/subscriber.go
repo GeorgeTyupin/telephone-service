@@ -8,12 +8,12 @@ import (
 
 func SubscribersToRecord(subscribers []model.Subscriber) record.CreateSubscribersParams {
 	params := record.CreateSubscribersParams{
-		Names:        make([]string, len(subscribers)),
-		PhoneNumbers: make([]string, len(subscribers)),
+		Column1: make([]string, len(subscribers)),
+		Column2: make([]string, len(subscribers)),
 	}
 	for i, subscriber := range subscribers {
-		params.Names[i] = subscriber.Name
-		params.PhoneNumbers[i] = model.PhoneNumberToString(subscriber.PhoneNumber)
+		params.Column1[i] = subscriber.Name
+		params.Column2[i] = model.PhoneNumberToString(subscriber.PhoneNumber)
 	}
 
 	return params
@@ -35,4 +35,25 @@ func SubscriberFromRecord(subscriber record.Abonent) (model.Subscriber, error) {
 	}
 
 	return model.Subscriber{Id: id, Name: subscriber.Name.String, PhoneNumber: phoneNumber}, nil
+}
+
+func SubscriberStatsFromRecord(stats record.GetSubscriberStatsRow) (model.SubscriberStats, error) {
+	callsCount, err := idFromRecord(stats.CallsCount)
+	if err != nil {
+		return model.SubscriberStats{}, fmt.Errorf("не удалось преобразовать количество звонков: %w", err)
+	}
+
+	totalDuration, err := durationFromRecord(stats.TotalDuration)
+	if err != nil {
+		return model.SubscriberStats{}, fmt.Errorf("не удалось преобразовать общую длительность: %w", err)
+	}
+
+	averageDuration, err := durationFromRecord(stats.AverageDuration)
+	if err != nil {
+		return model.SubscriberStats{}, fmt.Errorf("не удалось преобразовать среднюю длительность: %w", err)
+	}
+
+	return model.SubscriberStats{
+		CallsCount: callsCount, TotalDuration: totalDuration, AverageDuration: averageDuration,
+	}, nil
 }

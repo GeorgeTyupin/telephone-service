@@ -14,6 +14,7 @@ import (
 const addCallParticipants = `-- name: AddCallParticipants :exec
 insert into call_participants (call_id, subscriber_id)
 select $1, unnest($2::bigint[])
+on conflict (call_id, subscriber_id) do nothing
 `
 
 type AddCallParticipantsParams struct {
@@ -26,44 +27,75 @@ func (q *Queries) AddCallParticipants(ctx context.Context, arg AddCallParticipan
 	return err
 }
 
-const createCall = `-- name: CreateCall :one
-insert into calls (duration, created_at)
-values ($1, $2)
-returning id, duration, created_at
+const closeCallParticipations = `-- name: CloseCallParticipations :exec
+update call_participations
+set left_at = $1
+where call_id = $2
+  and id = any($3::bigint[])
+  and left_at is null
 `
 
-type CreateCallParams struct {
-	Duration  pgtype.Interval
-	CreatedAt pgtype.Timestamptz
+type CloseCallParticipationsParams struct {
+	LeftAt  pgtype.Timestamptz
+	CallID  int64
+	Column3 []int64
 }
 
-func (q *Queries) CreateCall(ctx context.Context, arg CreateCallParams) (Call, error) {
-	row := q.db.QueryRow(ctx, createCall, arg.Duration, arg.CreatedAt)
-	var i Call
-	err := row.Scan(&i.ID, &i.Duration, &i.CreatedAt)
-	return i, err
+func (q *Queries) CloseCallParticipations(ctx context.Context, arg CloseCallParticipationsParams) error {
+	_, err := q.db.Exec(ctx, closeCallParticipations, arg.LeftAt, arg.CallID, arg.Column3)
+	return err
 }
 
 const getCalls = `-- name: GetCalls :many
-select c.id, c.duration, c.created_at,
-       a.id as subscriber_id, a.name, a.phone_number
+select c.id, c.duration, c.created_at, c.status,
+       c.started_at, c.finished_at, c.version,
+       statement_timestamp()::timestamptz as observed_at,
+       (case when c.status = 'active'
+           then greatest(statement_timestamp() - c.started_at, interval '0')
+           else c.duration end)::interval as elapsed,
+       a.id as subscriber_id, a.name, a.phone_number,
+       p.id as participation_id, p.joined_at, p.left_at
 from calls c
 left join call_participants cp on cp.call_id = c.id
 left join abonents a on a.id = cp.subscriber_id
-order by c.id, a.id
+left join call_participations p
+    on p.call_id = cp.call_id and p.subscriber_id = cp.subscriber_id
+where (c.id = $1::bigint or $1::bigint = 0)
+  and (c.status = $2::text or $2::text = '')
+  and (exists (
+      select 1 from call_participants participant
+      where participant.call_id = c.id
+        and participant.subscriber_id = $3::bigint
+  ) or $3::bigint = 0)
+order by c.id, a.id, p.id
 `
 
-type GetCallsRow struct {
-	ID           int64
-	Duration     pgtype.Interval
-	CreatedAt    pgtype.Timestamptz
-	SubscriberID pgtype.Int8
-	Name         pgtype.Text
-	PhoneNumber  pgtype.Text
+type GetCallsParams struct {
+	Column1 int64
+	Column2 string
+	Column3 int64
 }
 
-func (q *Queries) GetCalls(ctx context.Context) ([]GetCallsRow, error) {
-	rows, err := q.db.Query(ctx, getCalls)
+type GetCallsRow struct {
+	ID              int64
+	Duration        pgtype.Interval
+	CreatedAt       pgtype.Timestamptz
+	Status          string
+	StartedAt       pgtype.Timestamptz
+	FinishedAt      pgtype.Timestamptz
+	Version         int64
+	ObservedAt      pgtype.Timestamptz
+	Elapsed         pgtype.Interval
+	SubscriberID    pgtype.Int8
+	Name            pgtype.Text
+	PhoneNumber     pgtype.Text
+	ParticipationID pgtype.Int8
+	JoinedAt        pgtype.Timestamptz
+	LeftAt          pgtype.Timestamptz
+}
+
+func (q *Queries) GetCalls(ctx context.Context, arg GetCallsParams) ([]GetCallsRow, error) {
+	rows, err := q.db.Query(ctx, getCalls, arg.Column1, arg.Column2, arg.Column3)
 	if err != nil {
 		return nil, err
 	}
@@ -75,9 +107,18 @@ func (q *Queries) GetCalls(ctx context.Context) ([]GetCallsRow, error) {
 			&i.ID,
 			&i.Duration,
 			&i.CreatedAt,
+			&i.Status,
+			&i.StartedAt,
+			&i.FinishedAt,
+			&i.Version,
+			&i.ObservedAt,
+			&i.Elapsed,
 			&i.SubscriberID,
 			&i.Name,
 			&i.PhoneNumber,
+			&i.ParticipationID,
+			&i.JoinedAt,
+			&i.LeftAt,
 		); err != nil {
 			return nil, err
 		}
@@ -87,4 +128,72 @@ func (q *Queries) GetCalls(ctx context.Context) ([]GetCallsRow, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const startCall = `-- name: StartCall :one
+insert into calls (duration, created_at, status, started_at)
+values (interval '0', statement_timestamp(), 'active', statement_timestamp())
+returning id, duration, created_at, status, started_at, finished_at, version
+`
+
+func (q *Queries) StartCall(ctx context.Context) (Call, error) {
+	row := q.db.QueryRow(ctx, startCall)
+	var i Call
+	err := row.Scan(
+		&i.ID,
+		&i.Duration,
+		&i.CreatedAt,
+		&i.Status,
+		&i.StartedAt,
+		&i.FinishedAt,
+		&i.Version,
+	)
+	return i, err
+}
+
+const startCallParticipations = `-- name: StartCallParticipations :exec
+insert into call_participations (call_id, subscriber_id, joined_at)
+select $1, unnest($2::bigint[]), $3
+`
+
+type StartCallParticipationsParams struct {
+	CallID   int64
+	Column2  []int64
+	JoinedAt pgtype.Timestamptz
+}
+
+func (q *Queries) StartCallParticipations(ctx context.Context, arg StartCallParticipationsParams) error {
+	_, err := q.db.Exec(ctx, startCallParticipations, arg.CallID, arg.Column2, arg.JoinedAt)
+	return err
+}
+
+const updateCall = `-- name: UpdateCall :one
+update calls
+set status = $1,
+    duration = $2,
+    finished_at = $3,
+    version = version + 1
+where id = $4 and version = $5
+returning id
+`
+
+type UpdateCallParams struct {
+	Status     string
+	Duration   pgtype.Interval
+	FinishedAt pgtype.Timestamptz
+	ID         int64
+	Version    int64
+}
+
+func (q *Queries) UpdateCall(ctx context.Context, arg UpdateCallParams) (int64, error) {
+	row := q.db.QueryRow(ctx, updateCall,
+		arg.Status,
+		arg.Duration,
+		arg.FinishedAt,
+		arg.ID,
+		arg.Version,
+	)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
 }

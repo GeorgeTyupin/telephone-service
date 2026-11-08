@@ -7,6 +7,8 @@ package record
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createSubscribers = `-- name: CreateSubscribers :exec
@@ -21,13 +23,50 @@ on conflict ((ltrim(regexp_replace(phone_number, '[^0-9]', '', 'g'), '0'))) do n
 `
 
 type CreateSubscribersParams struct {
-	Names        []string
-	PhoneNumbers []string
+	Column1 []string
+	Column2 []string
 }
 
 func (q *Queries) CreateSubscribers(ctx context.Context, arg CreateSubscribersParams) error {
-	_, err := q.db.Exec(ctx, createSubscribers, arg.Names, arg.PhoneNumbers)
+	_, err := q.db.Exec(ctx, createSubscribers, arg.Column1, arg.Column2)
 	return err
+}
+
+const getSubscriber = `-- name: GetSubscriber :one
+select id, name, phone_number
+from abonents
+where id = $1
+`
+
+func (q *Queries) GetSubscriber(ctx context.Context, id int64) (Abonent, error) {
+	row := q.db.QueryRow(ctx, getSubscriber, id)
+	var i Abonent
+	err := row.Scan(&i.ID, &i.Name, &i.PhoneNumber)
+	return i, err
+}
+
+const getSubscriberStats = `-- name: GetSubscriberStats :one
+select count(c.id)::bigint as calls_count,
+       coalesce(sum(c.duration), interval '0')::interval as total_duration,
+       coalesce(avg(c.duration), interval '0')::interval as average_duration
+from abonents a
+left join call_participants cp on cp.subscriber_id = a.id
+left join calls c on c.id = cp.call_id and c.status = 'finished'
+where a.id = $1
+group by a.id
+`
+
+type GetSubscriberStatsRow struct {
+	CallsCount      int64
+	TotalDuration   pgtype.Interval
+	AverageDuration pgtype.Interval
+}
+
+func (q *Queries) GetSubscriberStats(ctx context.Context, id int64) (GetSubscriberStatsRow, error) {
+	row := q.db.QueryRow(ctx, getSubscriberStats, id)
+	var i GetSubscriberStatsRow
+	err := row.Scan(&i.CallsCount, &i.TotalDuration, &i.AverageDuration)
+	return i, err
 }
 
 const getSubscribers = `-- name: GetSubscribers :many
@@ -67,8 +106,8 @@ order by a.id
 for key share of a
 `
 
-func (q *Queries) GetSubscribersByPhoneNumbers(ctx context.Context, phoneNumbers []string) ([]Abonent, error) {
-	rows, err := q.db.Query(ctx, getSubscribersByPhoneNumbers, phoneNumbers)
+func (q *Queries) GetSubscribersByPhoneNumbers(ctx context.Context, dollar_1 []string) ([]Abonent, error) {
+	rows, err := q.db.Query(ctx, getSubscribersByPhoneNumbers, dollar_1)
 	if err != nil {
 		return nil, err
 	}

@@ -15,12 +15,24 @@ type Abonent struct {
 }
 
 type Call struct {
-	ID        int64
-	Duration  pgtype.Interval
-	CreatedAt pgtype.Timestamptz
+	ID         int64
+	Duration   pgtype.Interval
+	CreatedAt  pgtype.Timestamptz
+	Status     string
+	StartedAt  pgtype.Timestamptz
+	FinishedAt pgtype.Timestamptz
+	Version    int64
 }
 
 type CallParticipant struct {
 	CallID       int64
 	SubscriberID int64
+}
+
+type CallParticipation struct {
+	ID           int64
+	CallID       int64
+	SubscriberID int64
+	JoinedAt     pgtype.Timestamptz
+	LeftAt       pgtype.Timestamptz
 }

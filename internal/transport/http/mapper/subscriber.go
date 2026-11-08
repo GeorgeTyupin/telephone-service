@@ -6,7 +6,7 @@ import (
 	"telephone-service/internal/model"
 )
 
-func SubscriberFromRequest(subscriber api.CreateCallParticipant) (model.Subscriber, error) {
+func SubscriberFromRequest(subscriber api.StartCallParticipant) (model.Subscriber, error) {
 	number, err := model.StringToPhoneNumber(subscriber.PhoneNumber)
 	if err != nil {
 		return model.Subscriber{}, fmt.Errorf("преобразование абонента, phone_number: %w", err)
@@ -23,5 +23,13 @@ func SubscriberToResponse(subscriber model.Subscriber) api.Subscriber {
 		ID:          subscriber.Id,
 		Name:        subscriber.Name,
 		PhoneNumber: model.PhoneNumberToString(subscriber.PhoneNumber),
+	}
+}
+
+func SubscriberStatsToResponse(stats model.SubscriberStats) api.SubscriberStats {
+	return api.SubscriberStats{
+		CallsCount:      stats.CallsCount,
+		TotalDuration:   stats.TotalDuration.DurationToString(),
+		AverageDuration: stats.AverageDuration.DurationToString(),
 	}
 }
