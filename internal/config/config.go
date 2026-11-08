@@ -1,7 +1,8 @@
 package config
 
 import (
-	"fmt"
+	"net"
+	"net/url"
 	"time"
 )
 
@@ -12,6 +13,7 @@ type Config struct {
 }
 
 type database struct {
+	Host              string        `path:"db.host"`
 	User              string        `path:"db.user"`
 	Name              string        `path:"db.name"`
 	Password          string        `path:"db.password"`
@@ -21,12 +23,25 @@ type database struct {
 }
 
 func (d database) GetConnectionString() string {
-	return fmt.Sprintf("postgres://%s:%s@localhost:%s/%s?sslmode=disable", d.User, d.Password, d.Port, d.Name)
+	connectionURL := url.URL{
+		Scheme:   "postgres",
+		User:     url.UserPassword(d.User, d.Password),
+		Host:     net.JoinHostPort(d.Host, d.Port),
+		Path:     "/" + d.Name,
+		RawPath:  "/" + url.PathEscape(d.Name),
+		RawQuery: "sslmode=disable",
+	}
+
+	return connectionURL.String()
 }
 
 type Server struct {
 	Addr              string        `path:"server.addr"`
 	ReadHeaderTimeout time.Duration `path:"server.read_header_timeout"`
+	ReadTimeout       time.Duration `path:"server.read_timeout"`
+	WriteTimeout      time.Duration `path:"server.write_timeout"`
+	IdleTimeout       time.Duration `path:"server.idle_timeout"`
+	MaxBodyBytes      int64         `path:"server.max_body_bytes"`
 	ShutdownTimeout   time.Duration `path:"server.shutdown_timeout"`
 }
 

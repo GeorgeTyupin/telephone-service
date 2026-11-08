@@ -32,9 +32,12 @@ RUN adduser \
     --no-create-home \
     --uid "${UID}" \
     appuser
+WORKDIR /app
 USER appuser
 
 COPY --from=build /bin/server /bin/
+COPY --chown=appuser:appuser configs/config.yaml ./configs/config.yaml
+COPY --chown=appuser:appuser migrations/ ./migrations/
 
 EXPOSE 8888
 

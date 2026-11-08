@@ -22,8 +22,11 @@ func NewServer(logger *slog.Logger, cfg config.Server, handler http.Handler) *Se
 		logger: logger,
 		server: &http.Server{
 			Addr:              cfg.Addr,
-			Handler:           handler,
+			Handler:           http.MaxBytesHandler(handler, cfg.MaxBodyBytes),
 			ReadHeaderTimeout: cfg.ReadHeaderTimeout,
+			ReadTimeout:       cfg.ReadTimeout,
+			WriteTimeout:      cfg.WriteTimeout,
+			IdleTimeout:       cfg.IdleTimeout,
 		},
 		shutdownTimeout: cfg.ShutdownTimeout,
 	}

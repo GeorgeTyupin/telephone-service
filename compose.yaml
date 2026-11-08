@@ -3,6 +3,11 @@ services:
     build:
       context: .
       target: final
+    env_file:
+      - ./configs/.env
+    environment:
+      DB__HOST: db
+      DB__PORT: "5432"
     ports:
       - 8888:8888
     depends_on:

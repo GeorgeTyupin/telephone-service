@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -37,7 +38,7 @@ func load() (Config, error) {
 		return Config{}, fmt.Errorf("не удалось прочитать YAML-конфигурацию: %w", err)
 	}
 
-	if err := loader.Load(file.Provider(envPath), dotenv.ParserEnv("", ".", environmentPath)); err != nil {
+	if err := loader.Load(file.Provider(envPath), dotenv.ParserEnv("", ".", environmentPath)); err != nil && !errors.Is(err, os.ErrNotExist) {
 		return Config{}, fmt.Errorf("не удалось прочитать .env: %w", err)
 	}
 
