@@ -4,5 +4,6 @@ generator:
     disable_all: true
     enable:
       - paths/server
+      - paths/client
       - ogen/otel
   convenient_errors: 'off'

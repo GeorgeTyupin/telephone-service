@@ -1,0 +1,47 @@
+---
+name: Integration tests
+
+"on":
+  pull_request:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integration:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - name: Set up Go
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Download dependencies
+        run: go mod download
+      - name: Run integration tests
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p test-results
+          make test-integration 2>&1 | tee test-results/integration.log
+      - name: Upload failure logs
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: integration-logs
+          path: test-results/integration.log
+          if-no-files-found: ignore
+          retention-days: 7

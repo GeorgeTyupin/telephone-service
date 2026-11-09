@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help generate ogen_gen sqlc_gen mocks_gen migrate test build run vet
+.PHONY: help generate ogen_gen sqlc_gen mocks_gen migrate test test-integration build run vet
 
 POSTGRES_PORT ?= 5400
 
@@ -10,7 +10,8 @@ help:
 		'make mocks_gen Сгенерировать тестовые моки' \
 		'make generate  Запустить все генераторы' \
 		'make migrate   Применить миграции к локальной PostgreSQL' \
-		'make test      Запустить все Go-тесты' \
+		'make test      Запустить тесты без Docker' \
+		'make test-integration  Запустить интеграционные тесты с PostgreSQL' \
 		'make build     Проверить сборку проекта' \
 		'make vet       Запустить go vet'
 
@@ -36,6 +37,9 @@ migrate:
 
 test:
 	go test ./...
+
+test-integration:
+	go test -race -count=1 -tags=integration -timeout=10m -v ./internal/tests/cases
 
 build: generate
 	go build ./...

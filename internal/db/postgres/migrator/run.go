@@ -3,7 +3,7 @@ package migrator
 import (
 	"context"
 	"fmt"
-	"os"
+	"io/fs"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
@@ -11,9 +11,7 @@ import (
 	"github.com/pressly/goose/v3/lock"
 )
 
-const migrationsPath = "migrations"
-
-func Run(ctx context.Context, pool *pgxpool.Pool) error {
+func Run(ctx context.Context, pool *pgxpool.Pool, migrations fs.FS) error {
 	locker, err := lock.NewPostgresSessionLocker()
 	if err != nil {
 		return fmt.Errorf("не удалось создать блокировку миграций: %w", err)
@@ -22,7 +20,7 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 	provider, err := goose.NewProvider(
 		goose.DialectPostgres,
 		stdlib.OpenDBFromPool(pool),
-		os.DirFS(migrationsPath),
+		migrations,
 		goose.WithSessionLocker(locker),
 	)
 	if err != nil {

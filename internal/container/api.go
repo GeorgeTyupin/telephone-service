@@ -2,12 +2,22 @@ package container
 
 import (
 	"log/slog"
+	"net/http"
 
 	httpserver "telephone-service/internal/transport/http"
 	"telephone-service/internal/transport/http/handlers"
 )
 
 func (c *Container) BuildApi() (*httpserver.Server, error) {
+	handler, err := c.BuildHandler()
+	if err != nil {
+		return nil, err
+	}
+
+	return httpserver.NewServer(c.logger.With(slog.String("component", "http")), c.config.Server, handler), nil
+}
+
+func (c *Container) BuildHandler() (http.Handler, error) {
 	logger := c.logger.With(slog.String("component", "http"))
 
 	var opts []handlers.Option
@@ -26,5 +36,5 @@ func (c *Container) BuildApi() (*httpserver.Server, error) {
 		return nil, err
 	}
 
-	return httpserver.NewServer(logger, c.config.Server, handler), nil
+	return http.MaxBytesHandler(handler, c.config.Server.MaxBodyBytes), nil
 }

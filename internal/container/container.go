@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"os"
 	"telephone-service/internal/config"
 	"telephone-service/internal/db/postgres/migrator"
 	"telephone-service/internal/db/postgres/pool"
@@ -57,16 +58,21 @@ type Container struct {
 	getSubscribersUsecase     *get_subscribers_uc.GetSubscribersUsecase
 }
 
+func NewContainerWithDependencies(cfg config.Config, logger *slog.Logger, dbPool *pgxpool.Pool) *Container {
+	return &Container{
+		config: cfg,
+		logger: logger,
+		dbPool: dbPool,
+	}
+}
+
 func NewContainer(ctx context.Context) (*Container, error) {
 	cfg, err := config.Load()
 	if err != nil {
 		return nil, fmt.Errorf("загрузка конфигурации: %w", err)
 	}
 
-	c := &Container{
-		config: cfg,
-		logger: slog.Default(),
-	}
+	c := NewContainerWithDependencies(cfg, slog.Default(), nil)
 	ready := false
 	defer func() {
 		if !ready {
@@ -87,7 +93,7 @@ func NewContainer(ctx context.Context) (*Container, error) {
 
 	migrationsCtx, cancel := context.WithTimeout(ctx, cfg.Database.MigrationsTimeout)
 	defer cancel()
-	if err := migrator.Run(migrationsCtx, c.dbPool); err != nil {
+	if err := migrator.Run(migrationsCtx, c.dbPool, os.DirFS("migrations")); err != nil {
 		return nil, fmt.Errorf("применение миграций: %w", err)
 	}
 
