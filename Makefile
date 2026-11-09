@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help generate ogen_gen sqlc_gen migrate test build run vet
+.PHONY: help generate ogen_gen sqlc_gen mocks_gen migrate test build run vet
 
 POSTGRES_PORT ?= 5400
 
@@ -7,7 +7,8 @@ help:
 	@printf '%s\n' \
 		'make ogen_gen  Сгенерировать Go-код из OpenAPI-контракта' \
 		'make sqlc_gen  Сгенерировать Go-код из SQL-запросов' \
-		'make generate  Запустить оба генератора' \
+		'make mocks_gen Сгенерировать тестовые моки' \
+		'make generate  Запустить все генераторы' \
 		'make migrate   Применить миграции к локальной PostgreSQL' \
 		'make test      Запустить все Go-тесты' \
 		'make build     Проверить сборку проекта' \
@@ -19,7 +20,10 @@ ogen_gen:
 sqlc_gen:
 	go generate -run 'sqlc' ./tools.go
 
-generate: ogen_gen sqlc_gen
+mocks_gen:
+	go generate -run 'mockgen' ./internal/service/... ./internal/usecase/...
+
+generate: ogen_gen sqlc_gen mocks_gen
 
 migrate:
 	@set -eu; set -a; . ./configs/.env; set +a; \
